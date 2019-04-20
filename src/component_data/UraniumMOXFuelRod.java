@@ -4,17 +4,17 @@ import component_blueprints.IDepletedFuelRod;
 import component_blueprints.IFuelRod;
 import component_blueprints.ReactorComponent;
 
-public class ThoriumDualFuelRod extends ReactorComponent implements IFuelRod{
+public class UraniumMOXFuelRod extends ReactorComponent implements IFuelRod {
 	
-	private static final int DURABILITY = 100000;
+	private static final int DURABILITY = 10000;
 	
-	private final static int HEAT_PER_SECOND = 6;
-	private final static int ELECTRICITY_PER_SECOND = 4 * 20;
-	private static final int NEUTRON_PULSES_EMITTED = 2; 
+	private static final int HEAT_PER_SECOND = 4;
+	private static final int ELECTRICITY_PER_SECOND = 5 * 20;
+	private static final int NEUTRON_PULSES_EMITTED = 1;
 	
 	private int pulsesReceived = 0;
 	
-	protected ThoriumDualFuelRod(int posX, int posY) {
+	protected UraniumMOXFuelRod(int posX, int posY) {
 		super(posX, posY, DURABILITY);
 	}
 
@@ -45,6 +45,7 @@ public class ThoriumDualFuelRod extends ReactorComponent implements IFuelRod{
 
 	@Override
 	public IDepletedFuelRod getDepletedRod() {
-		return new DepletedThoriumDualFuelRod(super.getX(), super.getY());
+		return new DepletedUraniumMOXFuelRod(super.getX(), super.getY());
 	}
+
 }

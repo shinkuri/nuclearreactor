@@ -20,6 +20,7 @@ public class Reactor {
 	
 	private static final int EU_PER_EXTRA_PULSE = 5;
 	private static final int HEAT_PER_EXTRA_PULSE = 4;
+	private static final int MAX_MOX_BOOST = 10;
 	
 	private boolean isActive = false;
 	private boolean isFluidMode = false;
@@ -39,12 +40,12 @@ public class Reactor {
 	private final Grid<ICoolantCell> coolantCells = new Grid<>(ICoolantCell.class, SIZE_X, SIZE_Y);
 	private final Grid<INeutronReflector> neutronReflectors = new Grid<>(INeutronReflector.class, SIZE_X, SIZE_Y);
 	private final Grid<IDepletedFuelRod> depletedRods = new Grid<>(IDepletedFuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<IFuelRod> moxRods = new Grid<>(IFuelRod.class, SIZE_X, SIZE_Y);
 	
 	public void addComponent(int posX, int posY, ComponentList type) {
 		switch(type) {
 		case UraniumFuelRod:
 			UraniumFuelRod c = new UraniumFuelRod(posX, posY);
-			//reactorChamber[posX][posY] = c;
 		}
 	}
 	
@@ -88,12 +89,13 @@ public class Reactor {
 	
 	/**
 	 * Process reactor components in this order: <br>
-	 * 1) Neutron Reflectors <br>
+	 * 1) Neutron Reflectors -> calculate all neutron pulses, including those caused by rods <br>
 	 * 2) Fuel Rods <br> 
-	 * 3) Heat Exchanger <br>
-	 * 4) Heat Vents <br>
-	 * 5) Coolant Cells <br>
-	 * 		3, 4, 5 are heat management components <br>
+	 * 3) MOX Fuel Rods <br>
+	 * 4) Heat Exchanger <br>
+	 * 5) Heat Vents <br>
+	 * 6) Coolant Cells <br>
+	 * 		4, 5, 6 are heat management components <br>
 	 */
 	private void simulate() {
 		currentOutputEU = 0;
@@ -110,15 +112,45 @@ public class Reactor {
 					}
 				}
 			}
+			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					c.addNeutronPulse(refl.getNeutronPulsesEmitted());
+					if(r.doDamage(refl.getNeutronPulsesEmitted()) == -1) {
+						removeComponent(r.getX(), r.getY());
+					}
+				}
+			}
 		}
-		// 2) TODO: Implement heat going into hull if not transferred away
-		for(IFuelRod rod : fuelRods.getAll()) {
+		for(IFuelRod rod: fuelRods.getAll()) {
 			final ReactorComponent r = (ReactorComponent) rod;
 			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {
 				if(c != null) {
 					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
 				}
 			}
+			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
+				}
+			}
+		}
+		for(IFuelRod rod: moxRods.getAll()) {
+			final ReactorComponent r = (ReactorComponent) rod;
+			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
+				}
+			}
+			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
+				}
+			}
+		}
+		
+		// 2) TODO: Implement heat going into hull if not transferred away
+		for(IFuelRod rod : fuelRods.getAll()) {
+			final ReactorComponent r = (ReactorComponent) rod;
 			currentOutputEU += rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses());
 			
 			final int heatPerSide = rod.getHeatPerSecond() / fuelRods.getMaxNeighbours(r.getX(), r.getY());
@@ -152,13 +184,50 @@ public class Reactor {
 			}
 		}
 		// 3)
+		for(IFuelRod rod: moxRods.getAll()) {
+			final ReactorComponent r = (ReactorComponent) rod;
+			// MOX boost rate scaling exponentially from 1x to MAX_MOX_BOOST depending on current hull heat
+			final double multiplier = ((MAX_MOX_BOOST - 1) / Math.pow(EXPLOSION_THRESHOLD, 2)) * Math.pow(reactorHeat, 2) + 1;
+			currentOutputEU += (rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses())) * multiplier;
+			
+			final int heatPerSide = (int) ((multiplier * rod.getHeatPerSecond()) / fuelRods.getMaxNeighbours(r.getX(), r.getY()));
+			for(IHeatExchanger c : heatExchangers.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					if(c.addHeat(heatPerSide) == -1) {
+						final ReactorComponent he = (ReactorComponent) c;
+						removeComponent(he.getX(), he.getY());
+					}
+				}
+			}
+			for(IHeatVent c : heatVents.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					if(c.addHeat(heatPerSide) == -1) {
+						final ReactorComponent h = (ReactorComponent) c;
+						removeComponent(h.getX(), h.getY());
+					}
+				}
+			}
+			for(ICoolantCell c : coolantCells.getNeighbours(r.getX(), r.getY())) {
+				if(c != null) {
+					if(c.addHeat(heatPerSide) == -1) {
+						final ReactorComponent co = (ReactorComponent) c;
+						removeComponent(co.getX(), co.getY());
+					}
+				}
+			}
+			
+			if(r.doDamage(1) == -1) {
+				removeComponent(r.getX(), r.getY());
+			}
+		}
+		// 4)
 		for(IHeatExchanger heatExch : heatExchangers.getAll()) {
 			// Component exchange rate
 			
 			// Hull exchange rate
 			
 		}
-		// 4)
+		// 5)
 		final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, reactorHeat);
 		for(IHeatVent vent : heatVents.getAll()) {
 			final ReactorComponent v = (ReactorComponent) vent;
@@ -188,7 +257,7 @@ public class Reactor {
 			// Self vent rate
 			vent.removeHeat(vent.getSelfVentRate());
 		}
-		// 5)
+		// 6)
 		for(ICoolantCell cool : coolantCells.getAll()) {
 			// passive
 		}

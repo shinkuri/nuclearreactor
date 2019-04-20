@@ -45,6 +45,6 @@ public class UraniumFuelRod extends ReactorComponent implements IFuelRod{
 
 	@Override
 	public IDepletedFuelRod getDepletedRod() {
-		return new DepletedUraniumFuelRod(super.getX(), super.getY(), Integer.MAX_VALUE);
+		return new DepletedUraniumFuelRod(super.getX(), super.getY());
 	}
 }

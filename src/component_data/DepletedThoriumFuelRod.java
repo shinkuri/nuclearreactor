@@ -3,9 +3,9 @@ package component_data;
 import component_blueprints.IDepletedFuelRod;
 import component_blueprints.ReactorComponent;
 
-public class DepletedUraniumFuelRod extends ReactorComponent implements IDepletedFuelRod {
+public class DepletedThoriumFuelRod extends ReactorComponent implements IDepletedFuelRod {
 
-	protected DepletedUraniumFuelRod(int posX, int posY) {
+	protected DepletedThoriumFuelRod(int posX, int posY) {
 		super(posX, posY, Integer.MAX_VALUE);
 	}
 

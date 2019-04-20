@@ -1,5 +1,6 @@
 package component_data;
 
+import component_blueprints.IDepletedFuelRod;
 import component_blueprints.IFuelRod;
 import component_blueprints.ReactorComponent;
 
@@ -40,5 +41,10 @@ public class UraniumQuadFuelRod extends ReactorComponent implements IFuelRod{
 	@Override
 	public int getNeutronPulses() {
 		return pulsesReceived;
+	}
+
+	@Override
+	public IDepletedFuelRod getDepletedRod() {
+		return new DepletedUraniumQuadFuelRod(super.getX(), super.getY());
 	}
 }
