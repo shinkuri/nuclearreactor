@@ -1,6 +1,7 @@
 package logic;
 
 import component_blueprints.ICoolantCell;
+import component_blueprints.IDepletedFuelRod;
 import component_blueprints.IFuelRod;
 import component_blueprints.IHeatExchanger;
 import component_blueprints.IHeatVent;
@@ -37,6 +38,7 @@ public class Reactor {
 	private final Grid<IHeatExchanger> heatExchangers = new Grid<>(IHeatExchanger.class, SIZE_X, SIZE_Y);
 	private final Grid<ICoolantCell> coolantCells = new Grid<>(ICoolantCell.class, SIZE_X, SIZE_Y);
 	private final Grid<INeutronReflector> neutronReflectors = new Grid<>(INeutronReflector.class, SIZE_X, SIZE_Y);
+	private final Grid<IDepletedFuelRod> depletedRods = new Grid<>(IDepletedFuelRod.class, SIZE_X, SIZE_Y);
 	
 	public void addComponent(int posX, int posY, ComponentList type) {
 		switch(type) {
@@ -48,8 +50,12 @@ public class Reactor {
 	
 	public void removeComponent(int posX, int posY) {
 		// really dumb way of doing this
-		//fuelRods.remove(posX, posY);
-		// TODO: Implement depleted rods
+		final IFuelRod fuelRod = fuelRods.get(posX, posY);
+		if(fuelRod != null) {
+			depletedRods.put(fuelRod.getDepletedRod(), posX, posY);
+			fuelRods.remove(posX, posY);
+			return;
+		}
 		heatVents.remove(posX, posY);
 		heatExchangers.remove(posX, posY);
 		coolantCells.remove(posX, posY);
@@ -105,7 +111,7 @@ public class Reactor {
 				}
 			}
 		}
-		// 2)
+		// 2) TODO: Implement heat going into hull if not transferred away
 		for(IFuelRod rod : fuelRods.getAll()) {
 			final ReactorComponent r = (ReactorComponent) rod;
 			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {

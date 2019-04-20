@@ -15,4 +15,5 @@ public interface IFuelRod {
 	public int getNeutronPulsesEmitted();
 	public void addNeutronPulse(int p);
 	public int getNeutronPulses();
+	public IDepletedFuelRod getDepletedRod();
 }
