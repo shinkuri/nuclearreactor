@@ -1,7 +1,5 @@
 package component_blueprints;
 
-import java.util.HashMap;
-
 /**
  * A component that sits in a reactor.
  * 
@@ -22,13 +20,6 @@ public abstract class ReactorComponent {
 	
 	protected final int durabilityMax;
 	protected int durability;
-		
-	// Available sides
-	public enum Sides {
-		top, right, bottom, left
-	}
-	private int availableSides;
-	private final HashMap<Sides, Boolean> sides = new HashMap<>();
 	
 	protected ReactorComponent(int posX, int posY, int durabilityMax) {
 		this.posX = posX;
@@ -36,16 +27,6 @@ public abstract class ReactorComponent {
 		this.durabilityMax = durabilityMax;
 		
 		durability = durabilityMax;
-		// Available sides:
-		sides.put(Sides.top, (posY > 0) ? true : false);
-		sides.put(Sides.right, (posX < 8) ? true : false);
-		sides.put(Sides.bottom, (posY < 5) ? true : false);
-		sides.put(Sides.left, (posX > 0) ? true : false);
-		for(boolean b : sides.values()) {
-			if(b) {
-				availableSides++;
-			}
-		}
 	}
 	
 	/**
@@ -74,11 +55,4 @@ public abstract class ReactorComponent {
 		return durability;
 	}
 	
-	public boolean getSide(ReactorComponent.Sides side) {
-		return sides.get(side);
-	}
-	
-	public int getSideCount() {
-		return availableSides;
-	}
 }

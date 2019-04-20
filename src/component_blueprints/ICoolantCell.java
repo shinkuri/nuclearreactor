@@ -7,4 +7,6 @@ package component_blueprints;
  */
 public interface ICoolantCell {
 
+	public int addHeat(int heat);
+	public void removeHeat(int heat);
 }

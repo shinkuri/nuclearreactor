@@ -12,5 +12,7 @@ public interface IFuelRod {
 	
 	public int getHeatPerSecond();
 	public int getElectricityPerSecond();
-	public int getNeutronPulseAmount();
+	public int getNeutronPulsesEmitted();
+	public void addNeutronPulse(int p);
+	public int getNeutronPulses();
 }

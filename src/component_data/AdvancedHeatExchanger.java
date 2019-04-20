@@ -5,14 +5,13 @@ import component_blueprints.ReactorComponent;
 
 public class AdvancedHeatExchanger extends ReactorComponent implements IHeatExchanger {
 	
-	private static final int DURABILITY = 10000;
-	private static final boolean IS_HEAT_GENERATOR = false;
+	private static final int HEAT_CAPACITY = 10000;
 	
 	private static final int COMPONENT_EXCHANGE_RATE = 24;
 	private static final int HULL_EXCHANGE_RATE = 8;
 	
 	protected AdvancedHeatExchanger(int posX, int posY) {
-		super(posX, posY, DURABILITY, IS_HEAT_GENERATOR);
+		super(posX, posY, HEAT_CAPACITY);
 	}
 
 	@Override
@@ -23,6 +22,16 @@ public class AdvancedHeatExchanger extends ReactorComponent implements IHeatExch
 	@Override
 	public int getHullExchangeRate() {
 		return HULL_EXCHANGE_RATE;
+	}
+
+	@Override
+	public int addHeat(int heat) {
+		return super.doDamage(heat);
+	}
+
+	@Override
+	public void removeHeat(int heat) {
+		super.doDamage(-heat);
 	}
 
 }

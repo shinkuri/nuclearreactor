@@ -10,4 +10,7 @@ public interface IHeatVent {
 	public int getSelfVentRate();
 	public int getReactorVentRate();
 	public int getComponentVentRate();
+	
+	public int addHeat(int heat);
+	public void removeHeat(int heat);
 }

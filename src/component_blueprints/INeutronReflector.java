@@ -6,6 +6,6 @@ package component_blueprints;
  *
  */
 public interface INeutronReflector {
-
-	public int getNeutronPulseAmount();
+	
+	public int getNeutronPulsesEmitted();
 }

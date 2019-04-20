@@ -1,21 +1,18 @@
 package component_data;
 
-import component_blueprints.IHeatManagementComponent;
 import component_blueprints.IHeatVent;
 import component_blueprints.ReactorComponent;
 
-public class ReactorHeatVent extends ReactorComponent implements IHeatVent, IHeatManagementComponent {
+public class ReactorHeatVent extends ReactorComponent implements IHeatVent {
 	
-	private static final int DURABILITY = 1000;
+	private static final int HEAT_CAPACITY = 1000;
 	
 	private static final int SELF_VENT_RATE = 5;
 	private static final int REACTOR_VENT_RATE = 5;
 	private static final int COMPONENT_VENT_RATE = 0;
-	
-	private int heat = 0;
-	
+		
 	protected ReactorHeatVent(int posX, int posY) {
-		super(posX, posY, DURABILITY);
+		super(posX, posY, HEAT_CAPACITY);
 	}
 
 	@Override
@@ -34,13 +31,13 @@ public class ReactorHeatVent extends ReactorComponent implements IHeatVent, IHea
 	}
 
 	@Override
-	public void acceptHeat(int heat) {
-		this.heat += heat;
+	public int addHeat(int heat) {
+		return super.doDamage(heat);
 	}
 
 	@Override
 	public void removeHeat(int heat) {
-		this.heat -= heat;
+		super.doDamage(-heat);
 	}
 
 }

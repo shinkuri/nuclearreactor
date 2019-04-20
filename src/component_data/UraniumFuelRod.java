@@ -6,14 +6,15 @@ import component_blueprints.ReactorComponent;
 public class UraniumFuelRod extends ReactorComponent implements IFuelRod{
 	
 	private static final int DURABILITY = 20000;
-	private static final boolean IS_HEAT_GENERATOR = true;
 	
 	private static final int HEAT_PER_SECOND = 4;
 	private static final int ELECTRICITY_PER_SECOND = 5 * 20;
-	private static final int NEUTRON_PULSES = 1; 
+	private static final int NEUTRON_PULSES_EMITTED = 1; 
+	
+	private int pulsesReceived = 0;
 	
 	public UraniumFuelRod(int posX, int posY) {
-		super(posX, posY, DURABILITY, IS_HEAT_GENERATOR);
+		super(posX, posY, DURABILITY);
 	}
 
 	@Override
@@ -27,7 +28,17 @@ public class UraniumFuelRod extends ReactorComponent implements IFuelRod{
 	}
 
 	@Override
-	public int getNeutronPulseAmount() {
-		return NEUTRON_PULSES;
+	public int getNeutronPulsesEmitted() {
+		return NEUTRON_PULSES_EMITTED;
+	}
+
+	@Override
+	public void addNeutronPulse(int p) {
+		pulsesReceived += p;
+	}
+
+	@Override
+	public int getNeutronPulses() {
+		return pulsesReceived;
 	}
 }

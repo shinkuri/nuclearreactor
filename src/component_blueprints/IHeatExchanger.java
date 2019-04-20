@@ -9,4 +9,7 @@ public interface IHeatExchanger {
 	
 	public int getComponentExchangeRate();
 	public int getHullExchangeRate();
+	
+	public int addHeat(int heat);
+	public void removeHeat(int heat);
 }
