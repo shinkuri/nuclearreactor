@@ -1,5 +1,9 @@
 package logic;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map.Entry;
+
 import component_blueprints.ICoolantCell;
 import component_blueprints.IDepletedFuelRod;
 import component_blueprints.IFuelRod;
@@ -19,7 +23,7 @@ public class Reactor {
 	private static final int EXPLOSION_STRENGTH = 1;
 	
 	private static final int EU_PER_EXTRA_PULSE = 5;
-	private static final int HEAT_PER_EXTRA_PULSE = 4;
+	private static final int HEAT_PER_EXTRA_PULSE = 4; // TODO: heat per pulse
 	private static final int MAX_MOX_BOOST = 10;
 	
 	private boolean isActive = false;
@@ -47,6 +51,8 @@ public class Reactor {
 		case UraniumFuelRod:
 			UraniumFuelRod c = new UraniumFuelRod(posX, posY);
 		}
+		
+		calculateStats();
 	}
 	
 	public void removeComponent(int posX, int posY) {
@@ -61,16 +67,18 @@ public class Reactor {
 		heatExchangers.remove(posX, posY);
 		coolantCells.remove(posX, posY);
 		neutronReflectors.remove(posX, posY);
+		
+		calculateStats();
 	}
 	
 	public void tick() {
-		if(reactorHeat >= 4000) {
+		if(reactorHeat >= RADIATION_THRESHOLD) {
 			// Apply radiation & nausea effect
 		}
-		if(reactorHeat >= 7000) {
+		if(reactorHeat >= BURN_THRESHOLD) {
 			// Set nearby entities on fire
 		}
-		if(reactorHeat >= 10000) {
+		if(reactorHeat >= EXPLOSION_THRESHOLD) {
 			// BOOM
 		}
 		
@@ -221,11 +229,71 @@ public class Reactor {
 			}
 		}
 		// 4)
+		// TODO: check whether ints are suitable for fractions or not
 		for(IHeatExchanger heatExch : heatExchangers.getAll()) {
+			final ReactorComponent h = (ReactorComponent) heatExch;
 			// Component exchange rate
-			
+			// - get heat of all adjacent components and the exchanger itself
+			HashMap<ReactorComponent, Integer> set = new HashMap<>();
+			set.put(h, h.getDurability());
+			for(IHeatExchanger c : heatExchangers.getNeighbours(h.getX(), h.getY())) {
+				if(c != null) {
+					final ReactorComponent rc = (ReactorComponent) c;
+					set.put(rc, rc.getDurability());
+				}
+			}
+			for(IHeatVent c : heatVents.getNeighbours(h.getX(), h.getY())) {
+				if(c != null) {
+					final ReactorComponent rc = (ReactorComponent) c;
+					set.put(rc, rc.getDurability());
+				}
+			}
+			for(ICoolantCell c : coolantCells.getNeighbours(h.getX(), h.getY())) {
+				if(c != null) {
+					final ReactorComponent rc = (ReactorComponent) c;
+					set.put(rc, rc.getDurability());
+				}
+			}
+			// - calculate fraction of the total heat
+			int summedComponentHeat = 0;
+			for(int c : set.values()) {
+				summedComponentHeat += c;
+			}
+			for(Entry<ReactorComponent, Integer> c : set.entrySet()) {
+				final int fraction = c.getValue() / summedComponentHeat;
+				set.put(c.getKey(), fraction);
+			}
+			// - calculate fraction of total exchanger throughput
+			for(Entry<ReactorComponent, Integer> c : set.entrySet()) {
+				final int fraction = c.getValue() * heatExch.getComponentExchangeRate();
+				set.put(c.getKey(), fraction);
+			}
+			// - take calculated fraction of heat from each component and distribute it to the others
+			for(Entry<ReactorComponent, Integer> cTake : set.entrySet()) {
+				cTake.getKey().doDamage(-cTake.getValue());
+				for(Entry<ReactorComponent, Integer> cDist : set.entrySet()) {
+					if(!cDist.getKey().equals(cTake.getKey())) {
+						if(cDist.getKey().doDamage(cDist.getValue() / (set.size() - 1)) == -1) {
+							removeComponent(cDist.getKey().getX(), cDist.getKey().getY());
+						}
+						
+					}
+				}
+			}
 			// Hull exchange rate
-			
+			// - see above procedure
+			final int summedHeat = reactorHeat + h.getDurability();
+			int reactorHeatFraction = reactorHeat / summedHeat;
+			int exchangerHeatFraction = h.getDurability() / summedHeat;
+			reactorHeatFraction = reactorHeatFraction * heatExch.getHullExchangeRate();
+			exchangerHeatFraction = exchangerHeatFraction * heatExch.getHullExchangeRate();
+			// - move heat
+			reactorHeat -= reactorHeatFraction;
+			if(heatExch.addHeat(reactorHeatFraction) == -1) {
+				removeComponent(h.getX(), h.getY());
+			}
+			heatExch.removeHeat(exchangerHeatFraction);
+			reactorHeat += exchangerHeatFraction;
 		}
 		// 5)
 		final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, reactorHeat);

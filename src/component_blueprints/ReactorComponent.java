@@ -29,6 +29,16 @@ public abstract class ReactorComponent {
 		durability = durabilityMax;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if(o instanceof ReactorComponent) {
+			final ReactorComponent rc = (ReactorComponent) o;
+			return ((this.posX == rc.getX()) && (this.posY == rc.getY())) ? true : false;
+		} else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Damages the component and returns the updated durability value. Returns -1 if the component has been destroyed.
 	 * @param damage Damage dealt
