@@ -18,16 +18,12 @@ public abstract class ReactorComponent {
 	private final int posX;
 	private final int posY;
 	
-	protected final int durabilityMax;
-	protected int durability;
-	
-	protected ReactorComponent(int posX, int posY, int durabilityMax) {
+	protected ReactorComponent(int posX, int posY) {
 		this.posX = posX;
 		this.posY = posY;
-		this.durabilityMax = durabilityMax;
-		
-		durability = durabilityMax;
 	}
+	
+	protected abstract void destroy();
 	
 	@Override
 	public boolean equals(Object o) {
@@ -39,16 +35,6 @@ public abstract class ReactorComponent {
 		}
 	}
 	
-	/**
-	 * Damages the component and returns the updated durability value. Returns -1 if the component has been destroyed.
-	 * @param damage Damage dealt
-	 * @return Updated durability or -1 if broken
-	 */
-	public int doDamage(int damage) {
-		durability -= damage;
-		return (durability > 0) ? durability : -1;
-	}
-	
 	public int getX() {
 		return posX;
 	}
@@ -56,13 +42,5 @@ public abstract class ReactorComponent {
 	public int getY() {
 		return posY;
 	}
-	
-	public int getDurabilityMax() {
-		return durabilityMax;
-	}
-	
-	public int getDurability() {
-		return durability;
-	}
-	
+
 }

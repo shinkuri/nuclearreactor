@@ -25,12 +25,12 @@ public class AdvancedHeatExchanger extends ReactorComponent implements IHeatExch
 	}
 
 	@Override
-	public int addHeat(int heat) {
+	public int tryAddHeat(int heat) {
 		return super.doDamage(heat);
 	}
 
 	@Override
-	public void removeHeat(int heat) {
+	public void tryRemoveHeat(int heat) {
 		super.doDamage(-heat);
 	}
 

@@ -1,9 +1,9 @@
 package logic;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 
+import component_blueprints.AbstractHeatVent;
 import component_blueprints.ICoolantCell;
 import component_blueprints.IDepletedFuelRod;
 import component_blueprints.IFuelRod;
@@ -13,6 +13,11 @@ import component_blueprints.INeutronReflector;
 import component_blueprints.ReactorComponent;
 import component_data.UraniumFuelRod;
 
+/*
+ * TODO: Better check for removing components: continue loops to avoid NPE, enable automation, hide check
+ * TODO: Sum up heat removed by vents and use for heat output
+ * TODO: Update caching method
+ */
 public class Reactor {
 	
 	private static final int EXPLOSION_THRESHOLD = 10000;
@@ -23,7 +28,7 @@ public class Reactor {
 	private static final int EXPLOSION_STRENGTH = 1;
 	
 	private static final int EU_PER_EXTRA_PULSE = 5;
-	private static final int HEAT_PER_EXTRA_PULSE = 4; // TODO: heat per pulse
+	private static final int HEAT_PER_EXTRA_PULSE = 4;
 	private static final int MAX_MOX_BOOST = 10;
 	
 	private boolean isActive = false;
@@ -39,7 +44,7 @@ public class Reactor {
 	private static final int SIZE_X = 9;
 	private static final int SIZE_Y = 6;
 	private final Grid<IFuelRod> fuelRods = new Grid<>(IFuelRod.class, SIZE_X, SIZE_Y);
-	private final Grid<IHeatVent> heatVents = new Grid<>(IHeatVent.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractHeatVent> heatVents = new Grid<>(AbstractHeatVent.class, SIZE_X, SIZE_Y);
 	private final Grid<IHeatExchanger> heatExchangers = new Grid<>(IHeatExchanger.class, SIZE_X, SIZE_Y);
 	private final Grid<ICoolantCell> coolantCells = new Grid<>(ICoolantCell.class, SIZE_X, SIZE_Y);
 	private final Grid<INeutronReflector> neutronReflectors = new Grid<>(INeutronReflector.class, SIZE_X, SIZE_Y);
@@ -155,16 +160,17 @@ public class Reactor {
 				}
 			}
 		}
-		
-		// 2) TODO: Implement heat going into hull if not transferred away
+		// 2)
 		for(IFuelRod rod : fuelRods.getAll()) {
 			final ReactorComponent r = (ReactorComponent) rod;
 			currentOutputEU += rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses());
 			
-			final int heatPerSide = rod.getHeatPerSecond() / fuelRods.getMaxNeighbours(r.getX(), r.getY());
+			final int heatPerSide = (rod.getHeatPerSecond() + HEAT_PER_EXTRA_PULSE * rod.getNeutronPulses()) / 
+					fuelRods.getMaxNeighbours(r.getX(), r.getY());
+			
 			for(IHeatExchanger c : heatExchangers.getNeighbours(r.getX(), r.getY())) {
 				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
+					if(c.tryAddHeat(heatPerSide) == -1) {
 						final ReactorComponent he = (ReactorComponent) c;
 						removeComponent(he.getX(), he.getY());
 					}
@@ -198,10 +204,12 @@ public class Reactor {
 			final double multiplier = ((MAX_MOX_BOOST - 1) / Math.pow(EXPLOSION_THRESHOLD, 2)) * Math.pow(reactorHeat, 2) + 1;
 			currentOutputEU += (rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses())) * multiplier;
 			
-			final int heatPerSide = (int) ((multiplier * rod.getHeatPerSecond()) / fuelRods.getMaxNeighbours(r.getX(), r.getY()));
+			final int heatPerSide = (int) ((multiplier * (rod.getHeatPerSecond() + HEAT_PER_EXTRA_PULSE * rod.getNeutronPulses())) / 
+					fuelRods.getMaxNeighbours(r.getX(), r.getY()));
+			
 			for(IHeatExchanger c : heatExchangers.getNeighbours(r.getX(), r.getY())) {
 				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
+					if(c.tryAddHeat(heatPerSide) == -1) {
 						final ReactorComponent he = (ReactorComponent) c;
 						removeComponent(he.getX(), he.getY());
 					}
@@ -228,8 +236,7 @@ public class Reactor {
 				removeComponent(r.getX(), r.getY());
 			}
 		}
-		// 4)
-		// TODO: check whether ints are suitable for fractions or not
+		// 4) TODO: check whether ints are suitable for fractions or not
 		for(IHeatExchanger heatExch : heatExchangers.getAll()) {
 			final ReactorComponent h = (ReactorComponent) heatExch;
 			// Component exchange rate
@@ -289,10 +296,10 @@ public class Reactor {
 			exchangerHeatFraction = exchangerHeatFraction * heatExch.getHullExchangeRate();
 			// - move heat
 			reactorHeat -= reactorHeatFraction;
-			if(heatExch.addHeat(reactorHeatFraction) == -1) {
+			if(heatExch.tryAddHeat(reactorHeatFraction) == -1) {
 				removeComponent(h.getX(), h.getY());
 			}
-			heatExch.removeHeat(exchangerHeatFraction);
+			heatExch.tryRemoveHeat(exchangerHeatFraction);
 			reactorHeat += exchangerHeatFraction;
 		}
 		// 5)
@@ -307,9 +314,10 @@ public class Reactor {
 			}
 			// Component vent rate
 			final int ratePerSide = vent.getComponentVentRate() / heatVents.getMaxNeighbours(v.getX(), v.getY());
+			int componentHeatRemoved = 0;
 			for(IHeatExchanger c : heatExchangers.getNeighbours(v.getX(), v.getY())) {
 				if(c != null) {
-					c.removeHeat(ratePerSide);
+					c.tryRemoveHeat(ratePerSide);
 				}
 			}
 			for(IHeatVent c : heatVents.getNeighbours(v.getX(), v.getY())) {

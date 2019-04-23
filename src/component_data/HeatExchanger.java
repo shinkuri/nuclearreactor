@@ -25,13 +25,13 @@ public class HeatExchanger extends ReactorComponent implements IHeatExchanger {
 	}
 	
 	@Override
-	public int addHeat(int heat) {
+	public int tryAddHeat(int heat) {
 		return super.doDamage(heat);
 	}
 
 	@Override
-	public void removeHeat(int heat) {
-		super.doDamage(-heat);
+	public int tryRemoveHeat(int heat) {
+		return super.doDamage(-heat);
 	}
 
 }
