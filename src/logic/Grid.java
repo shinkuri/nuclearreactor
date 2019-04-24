@@ -3,7 +3,9 @@ package logic;
 import java.lang.reflect.Array;
 import java.util.HashSet;
 
-public class Grid<E> {
+import component_blueprints.ReactorComponent;
+
+public class Grid<E extends ReactorComponent> {
 	
 	private E[][] grid;
 	
@@ -15,16 +17,17 @@ public class Grid<E> {
         this.grid = a;
 	}
 	
-	public void put(E e, int x, int y) {
-		grid[x][y] = e;
+	@SuppressWarnings("unchecked")
+	public void put(ReactorComponent rc) {
+		grid[rc.getX()][rc.getY()] = (E) rc;
 	}
 	
-	public E get(int x, int y) {
-		return grid[x][y];
+	public E get(ReactorComponent rc) {
+		return grid[rc.getX()][rc.getY()];
 	}
 	
-	public void remove(int x, int y) {
-		grid[x][y] = null;
+	public void remove(ReactorComponent rc) {
+		grid[rc.getX()][rc.getY()] = null;
 	}
 	
 	public int count() {
@@ -59,7 +62,9 @@ public class Grid<E> {
 		return all;
 	}
 	
-	public HashSet<E> getNeighbours(int x, int y){
+	public HashSet<E> getNeighbours(ReactorComponent rc){
+		final int x = rc.getX();
+		final int y = rc.getY();
 		HashSet<E> neighbours = new HashSet<>();
 		if(y > 0) {
 			neighbours.add(grid[x][y - 1]);
@@ -76,7 +81,9 @@ public class Grid<E> {
 		return neighbours;
 	}
 	
-	public int getMaxNeighbours(int x, int y) {
+	public int getMaxNeighbours(ReactorComponent rc) {
+		final int x = rc.getX();
+		final int y = rc.getY();
 		int c = 0;
 		if(y > 0) {
 			c++;

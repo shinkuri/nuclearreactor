@@ -5,11 +5,7 @@ package component_blueprints;
  * 
  * Depending on placement in the 6x9 reactor grid components can have a differing amount of available sides.
  * All values are evenly distributed to all available sides (2 - 4) <br>
- * <br>
- * Durability for fuel rods is reduced by one each reactor tick. <br>
- * Durability for heat management components is reduced by one for every 60 heat. <br>
- * Durability for neutron reflectors is reduced by one/two/four for each single/dual/quad cell adjacent to it. <br>
- * 
+ * <br> 
  * @author Kekzdealer
  *
  */
@@ -17,13 +13,21 @@ public abstract class ReactorComponent {
 	
 	private final int posX;
 	private final int posY;
+
+	protected boolean alive = true;
 	
 	protected ReactorComponent(int posX, int posY) {
 		this.posX = posX;
 		this.posY = posY;
 	}
 	
-	protected abstract void destroy();
+	protected void setDestroyed() {
+		alive = false;
+	}
+	
+	public boolean isAlive() {
+		return alive;
+	}
 	
 	@Override
 	public boolean equals(Object o) {

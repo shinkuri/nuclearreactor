@@ -3,22 +3,21 @@ package logic;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import component_blueprints.AbstractCoolantCell;
+import component_blueprints.AbstractDepletedFuelRod;
+import component_blueprints.AbstractFuelRod;
+import component_blueprints.AbstractHeatExchanger;
 import component_blueprints.AbstractHeatVent;
-import component_blueprints.ICoolantCell;
-import component_blueprints.IDepletedFuelRod;
-import component_blueprints.IFuelRod;
-import component_blueprints.IHeatExchanger;
-import component_blueprints.IHeatVent;
-import component_blueprints.INeutronReflector;
+import component_blueprints.AbstractNeutronReflector;
 import component_blueprints.ReactorComponent;
-import component_data.UraniumFuelRod;
+import logic.ComponentFactory.ComponentType;
 
 /*
- * TODO: Better check for removing components: continue loops to avoid NPE, enable automation, hide check
- * TODO: Sum up heat removed by vents and use for heat output
  * TODO: Update caching method
  */
-public class Reactor {
+public class Reactor implements Runnable{
+	
+	private final ComponentFactory componentFactory = new ComponentFactory();
 	
 	private static final int EXPLOSION_THRESHOLD = 10000;
 	private static final int BURN_THRESHOLD = 7000;
@@ -27,14 +26,11 @@ public class Reactor {
 	private static final int EFFECT_RADIUS = 8; // Center is center of the 5x5x5 cube
 	private static final int EXPLOSION_STRENGTH = 1;
 	
-	private static final int EU_PER_EXTRA_PULSE = 5;
-	private static final int HEAT_PER_EXTRA_PULSE = 4;
-	private static final int MAX_MOX_BOOST = 10;
+	private StatusReport statusReport;
 	
 	private boolean isActive = false;
-	private boolean isFluidMode = false;
-	private int reactorHeat = 0;
-	private int tickCounter = 0;
+	private boolean isEUMode = true;
+	private int hullHeat = 1;
 	
 	private int hullVentingCapacity = 0;
 	
@@ -43,300 +39,324 @@ public class Reactor {
 	
 	private static final int SIZE_X = 9;
 	private static final int SIZE_Y = 6;
-	private final Grid<IFuelRod> fuelRods = new Grid<>(IFuelRod.class, SIZE_X, SIZE_Y);
 	private final Grid<AbstractHeatVent> heatVents = new Grid<>(AbstractHeatVent.class, SIZE_X, SIZE_Y);
-	private final Grid<IHeatExchanger> heatExchangers = new Grid<>(IHeatExchanger.class, SIZE_X, SIZE_Y);
-	private final Grid<ICoolantCell> coolantCells = new Grid<>(ICoolantCell.class, SIZE_X, SIZE_Y);
-	private final Grid<INeutronReflector> neutronReflectors = new Grid<>(INeutronReflector.class, SIZE_X, SIZE_Y);
-	private final Grid<IDepletedFuelRod> depletedRods = new Grid<>(IDepletedFuelRod.class, SIZE_X, SIZE_Y);
-	private final Grid<IFuelRod> moxRods = new Grid<>(IFuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractHeatExchanger> heatExchangers = new Grid<>(AbstractHeatExchanger.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractFuelRod> fuelRods = new Grid<>(AbstractFuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractDepletedFuelRod> depletedRods = new Grid<>(AbstractDepletedFuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractNeutronReflector> neutronReflectors = new Grid<>(AbstractNeutronReflector.class, SIZE_X, SIZE_Y);
+	private final Grid<AbstractCoolantCell> coolantCells = new Grid<>(AbstractCoolantCell.class, SIZE_X, SIZE_Y);
 	
-	public void addComponent(int posX, int posY, ComponentList type) {
-		switch(type) {
-		case UraniumFuelRod:
-			UraniumFuelRod c = new UraniumFuelRod(posX, posY);
+	@Override
+	public void run() {
+		while(isActive) {
+			long delta = System.currentTimeMillis();
+			tick(statusReport);
+			delta = delta - System.currentTimeMillis();
+			try {
+				Thread.sleep(1000 - delta);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		
+	}
+	
+	public boolean isRunning() {
+		return isActive;
+	}
+	
+	public void setOn() {
+		isActive = true;
+	}
+	
+	public void setOff() {
+		isActive = false;
+	}
+
+	public void hookReactor(StatusReport statusReport) {
+		this.statusReport = statusReport;
+		final Thread simulationThread = new Thread(this);
+		simulationThread.start();
+	}
+	
+	public void insertComponent(ComponentType type, int posX, int posY) {
+		final ReactorComponent rc = componentFactory.generateComponent(type, posX, posY);
+		if(rc instanceof AbstractHeatVent) {
+			heatVents.put(rc);
+		}
+		else if(rc instanceof AbstractHeatExchanger) {
+			heatExchangers.put(rc);
+		}
+		else if(rc instanceof AbstractFuelRod) {
+			fuelRods.put(rc);
+		}
+		else if(rc instanceof AbstractDepletedFuelRod) {
+			depletedRods.put(rc);
+		}
+		else if(rc instanceof AbstractNeutronReflector) {
+			neutronReflectors.put(rc);
+		}
+		else if(rc instanceof AbstractCoolantCell) {
+			coolantCells.put(rc);
+		}
+		// Update cache
 		calculateStats();
 	}
 	
-	public void removeComponent(int posX, int posY) {
-		// really dumb way of doing this
-		final IFuelRod fuelRod = fuelRods.get(posX, posY);
-		if(fuelRod != null) {
-			depletedRods.put(fuelRod.getDepletedRod(), posX, posY);
-			fuelRods.remove(posX, posY);
-			return;
+	/**
+	 * If a component with heat capacity is destroyed, all the heat it holds is released into the hull
+	 * @param rc : Component to be destroyed
+	 */
+	public void removeComponent(ReactorComponent rc) {
+		System.out.println("removed component " +rc.getX() +"/" +rc.getY());
+		// TODO: Fix this really dumb way to remove components.
+		if(rc instanceof AbstractNeutronReflector) {			
+			neutronReflectors.remove(rc);
 		}
-		heatVents.remove(posX, posY);
-		heatExchangers.remove(posX, posY);
-		coolantCells.remove(posX, posY);
-		neutronReflectors.remove(posX, posY);
-		
+		else if(rc instanceof AbstractHeatVent) {
+			AbstractHeatVent c = (AbstractHeatVent) rc;
+			hullHeat += c.getHeat();
+			heatVents.remove(rc);
+		}
+		else if(rc instanceof AbstractHeatExchanger) {
+			AbstractHeatExchanger c = (AbstractHeatExchanger) rc;
+			hullHeat += c.getHeat();
+			heatExchangers.remove(rc);
+		}
+		else if(rc instanceof AbstractCoolantCell) {
+			AbstractCoolantCell c = (AbstractCoolantCell) rc;
+			hullHeat += c.getHeat();
+			coolantCells.remove(rc);
+		}
+		else if(rc instanceof AbstractFuelRod) {
+			AbstractFuelRod c = (AbstractFuelRod) rc;
+			depletedRods.put(componentFactory.generateComponent(c.getDepletedRod(), c.getX(), c.getY()));
+			fuelRods.remove(rc);
+		}
+		// Update cache
 		calculateStats();
 	}
 	
-	public void tick() {
-		if(reactorHeat >= RADIATION_THRESHOLD) {
+	public void tick(StatusReport statusReport) {
+		if(hullHeat >= RADIATION_THRESHOLD) {
 			// Apply radiation & nausea effect
 		}
-		if(reactorHeat >= BURN_THRESHOLD) {
+		if(hullHeat >= BURN_THRESHOLD) {
 			// Set nearby entities on fire
 		}
-		if(reactorHeat >= EXPLOSION_THRESHOLD) {
+		if(hullHeat >= EXPLOSION_THRESHOLD) {
 			// BOOM
 		}
 		
-		if(!isActive) {
-			if(tickCounter == 20) {
-				simulate();
-			}
-			
-			if(isFluidMode) {
-				// push heat to either heat hatch or convert cooling fluid
-			} else {
+		if(isActive) {
+			simulate();
+			statusReport.setHullHeat(hullHeat);
+			statusReport.setCurrentEUt(currentOutputEU / 20);
+			statusReport.setCurrentHUs(currentOutputHeat);
+			if(isEUMode) {
 				// push EU to dynamo hatch
+			} else {
+				// push heat to either heat hatch or convert cooling fluid
 			}
 		}
 	}
 	
 	/**
 	 * Process reactor components in this order: <br>
-	 * 1) Neutron Reflectors -> calculate all neutron pulses, including those caused by rods <br>
+	 * 1) Calculate all neutron pulses <br>
 	 * 2) Fuel Rods <br> 
-	 * 3) MOX Fuel Rods <br>
-	 * 4) Heat Exchanger <br>
-	 * 5) Heat Vents <br>
-	 * 6) Coolant Cells <br>
-	 * 		4, 5, 6 are heat management components <br>
+	 * 3) Heat Exchanger <br>
+	 * 4) Heat Vents <br>
+	 * 5) Update output values <br>
+	 * 		3 & 4 are heat management components <br>
 	 */
 	private void simulate() {
 		currentOutputEU = 0;
 		currentOutputHeat = 0;
 		
 		// 1)
-		for(INeutronReflector refl : neutronReflectors.getAll()) {
-			final ReactorComponent r = (ReactorComponent) refl;
-			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {
+		for(AbstractNeutronReflector refl : neutronReflectors.getAll()) {
+			for(AbstractFuelRod c : fuelRods.getNeighbours(refl)) {
 				if(c != null) {
-					c.addNeutronPulse(refl.getNeutronPulsesEmitted());
-					if(r.doDamage(refl.getNeutronPulsesEmitted()) == -1) {
-						removeComponent(r.getX(), r.getY());
-					}
-				}
-			}
-			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					c.addNeutronPulse(refl.getNeutronPulsesEmitted());
-					if(r.doDamage(refl.getNeutronPulsesEmitted()) == -1) {
-						removeComponent(r.getX(), r.getY());
+					refl.applyReflectedPulses(c);
+					if(!refl.isAlive()) {
+						removeComponent(refl);
+						break;
 					}
 				}
 			}
 		}
-		for(IFuelRod rod: fuelRods.getAll()) {
-			final ReactorComponent r = (ReactorComponent) rod;
-			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {
+		for(AbstractFuelRod rod: fuelRods.getAll()) {
+			for(AbstractFuelRod c : fuelRods.getNeighbours(rod)) {
 				if(c != null) {
-					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
-				}
-			}
-			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
-				}
-			}
-		}
-		for(IFuelRod rod: moxRods.getAll()) {
-			final ReactorComponent r = (ReactorComponent) rod;
-			for(IFuelRod c : moxRods.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
-				}
-			}
-			for(IFuelRod c : fuelRods.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					c.addNeutronPulse(rod.getNeutronPulsesEmitted());					
+					c.addNeutronPulse(rod.getNEUTRON_PULSES_EMITTED());					
 				}
 			}
 		}
 		// 2)
-		for(IFuelRod rod : fuelRods.getAll()) {
-			final ReactorComponent r = (ReactorComponent) rod;
-			currentOutputEU += rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses());
+		for(AbstractFuelRod rod : fuelRods.getAll()) {
+			currentOutputEU += rod.getElectricityPerSecond(hullHeat, EXPLOSION_THRESHOLD);
 			
-			final int heatPerSide = (rod.getHeatPerSecond() + HEAT_PER_EXTRA_PULSE * rod.getNeutronPulses()) / 
-					fuelRods.getMaxNeighbours(r.getX(), r.getY());
+			int heat = rod.getHeatPerSecond(hullHeat, EXPLOSION_THRESHOLD);
+			final int heatPerSide = heat / fuelRods.getMaxNeighbours(rod);
 			
-			for(IHeatExchanger c : heatExchangers.getNeighbours(r.getX(), r.getY())) {
+			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(rod)) {
 				if(c != null) {
-					if(c.tryAddHeat(heatPerSide) == -1) {
-						final ReactorComponent he = (ReactorComponent) c;
-						removeComponent(he.getX(), he.getY());
+					heat -= c.tryAddHeat(heatPerSide);
+					if(!c.isAlive()) {
+						removeComponent(c);
 					}
 				}
 			}
-			for(IHeatVent c : heatVents.getNeighbours(r.getX(), r.getY())) {
+			for(AbstractHeatVent c : heatVents.getNeighbours(rod)) {
 				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
-						final ReactorComponent h = (ReactorComponent) c;
-						removeComponent(h.getX(), h.getY());
+					heat -= c.tryAddHeat(heatPerSide);
+					if(!c.isAlive()) {
+						removeComponent(c);
 					}
 				}
 			}
-			for(ICoolantCell c : coolantCells.getNeighbours(r.getX(), r.getY())) {
+			for(AbstractCoolantCell c : coolantCells.getNeighbours(rod)) {
 				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
-						final ReactorComponent co = (ReactorComponent) c;
-						removeComponent(co.getX(), co.getY());
+					heat -= c.tryAddHeat(heatPerSide);
+					if(!c.isAlive()) {
+						removeComponent(c);
 					}
 				}
 			}
-			
-			if(r.doDamage(1) == -1) {
-				removeComponent(r.getX(), r.getY());
+			hullHeat += heat;
+			rod.use();
+			if(!rod.isAlive()) {
+				removeComponent(rod);
 			}
 		}
 		// 3)
-		for(IFuelRod rod: moxRods.getAll()) {
-			final ReactorComponent r = (ReactorComponent) rod;
-			// MOX boost rate scaling exponentially from 1x to MAX_MOX_BOOST depending on current hull heat
-			final double multiplier = ((MAX_MOX_BOOST - 1) / Math.pow(EXPLOSION_THRESHOLD, 2)) * Math.pow(reactorHeat, 2) + 1;
-			currentOutputEU += (rod.getElectricityPerSecond() + (EU_PER_EXTRA_PULSE * rod.getNeutronPulses())) * multiplier;
-			
-			final int heatPerSide = (int) ((multiplier * (rod.getHeatPerSecond() + HEAT_PER_EXTRA_PULSE * rod.getNeutronPulses())) / 
-					fuelRods.getMaxNeighbours(r.getX(), r.getY()));
-			
-			for(IHeatExchanger c : heatExchangers.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					if(c.tryAddHeat(heatPerSide) == -1) {
-						final ReactorComponent he = (ReactorComponent) c;
-						removeComponent(he.getX(), he.getY());
-					}
-				}
-			}
-			for(IHeatVent c : heatVents.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
-						final ReactorComponent h = (ReactorComponent) c;
-						removeComponent(h.getX(), h.getY());
-					}
-				}
-			}
-			for(ICoolantCell c : coolantCells.getNeighbours(r.getX(), r.getY())) {
-				if(c != null) {
-					if(c.addHeat(heatPerSide) == -1) {
-						final ReactorComponent co = (ReactorComponent) c;
-						removeComponent(co.getX(), co.getY());
-					}
-				}
-			}
-			
-			if(r.doDamage(1) == -1) {
-				removeComponent(r.getX(), r.getY());
-			}
-		}
-		// 4) TODO: check whether ints are suitable for fractions or not
-		for(IHeatExchanger heatExch : heatExchangers.getAll()) {
-			final ReactorComponent h = (ReactorComponent) heatExch;
+		for(AbstractHeatExchanger heatExch : heatExchangers.getAll()) {
 			// Component exchange rate
-			// - get heat of all adjacent components and the exchanger itself
-			HashMap<ReactorComponent, Integer> set = new HashMap<>();
-			set.put(h, h.getDurability());
-			for(IHeatExchanger c : heatExchangers.getNeighbours(h.getX(), h.getY())) {
+			// - get heat of all adjacent components
+			HashMap<ReactorComponent, Double> targets = new HashMap<>();
+			targets.put(heatExch, (double) heatExch.getHeat());
+			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(heatExch)) {
 				if(c != null) {
-					final ReactorComponent rc = (ReactorComponent) c;
-					set.put(rc, rc.getDurability());
+					targets.put(c, (double) c.getHeat());
 				}
 			}
-			for(IHeatVent c : heatVents.getNeighbours(h.getX(), h.getY())) {
+			for(AbstractHeatVent c : heatVents.getNeighbours(heatExch)) {
 				if(c != null) {
-					final ReactorComponent rc = (ReactorComponent) c;
-					set.put(rc, rc.getDurability());
+					targets.put(c, (double) c.getHeat());
 				}
 			}
-			for(ICoolantCell c : coolantCells.getNeighbours(h.getX(), h.getY())) {
+			for(AbstractCoolantCell c : coolantCells.getNeighbours(heatExch)) {
 				if(c != null) {
-					final ReactorComponent rc = (ReactorComponent) c;
-					set.put(rc, rc.getDurability());
+					targets.put(c, (double) c.getHeat());
 				}
 			}
-			// - calculate fraction of the total heat
-			int summedComponentHeat = 0;
-			for(int c : set.values()) {
-				summedComponentHeat += c;
-			}
-			for(Entry<ReactorComponent, Integer> c : set.entrySet()) {
-				final int fraction = c.getValue() / summedComponentHeat;
-				set.put(c.getKey(), fraction);
-			}
-			// - calculate fraction of total exchanger throughput
-			for(Entry<ReactorComponent, Integer> c : set.entrySet()) {
-				final int fraction = c.getValue() * heatExch.getComponentExchangeRate();
-				set.put(c.getKey(), fraction);
-			}
+			// - do the thing
+			heatExch.calculateFractionsOfThrougput(targets);
 			// - take calculated fraction of heat from each component and distribute it to the others
-			for(Entry<ReactorComponent, Integer> cTake : set.entrySet()) {
-				cTake.getKey().doDamage(-cTake.getValue());
-				for(Entry<ReactorComponent, Integer> cDist : set.entrySet()) {
+			// TODO: Maybe fix this type-checking insanity?
+			for(Entry<ReactorComponent, Double> cTake : targets.entrySet()) {
+				// Take heat from the currently processed component
+				int removedHeat = 0;
+				if(cTake.getKey() instanceof AbstractHeatExchanger) {
+					final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
+				}
+				else if(cTake.getKey() instanceof AbstractHeatVent) {
+					final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
+				}
+				else if(cTake.getKey() instanceof AbstractCoolantCell) {
+					final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
+				}
+				// Try to distribute all the heat that was taken
+				for(Entry<ReactorComponent, Double> cDist : targets.entrySet()) {
 					if(!cDist.getKey().equals(cTake.getKey())) {
-						if(cDist.getKey().doDamage(cDist.getValue() / (set.size() - 1)) == -1) {
-							removeComponent(cDist.getKey().getX(), cDist.getKey().getY());
+						if(cDist.getKey() instanceof AbstractHeatExchanger) {
+							final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
 						}
-						
+						else if(cDist.getKey() instanceof AbstractHeatVent) {
+							final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
+						}
+						else if(cDist.getKey() instanceof AbstractCoolantCell) {
+							final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
+						}
+						if(!cDist.getKey().isAlive()) {
+							removeComponent(cDist.getKey());
+						}
+					}
+				}
+				// Add heat that couldn't be distributed back to the source component
+				if(removedHeat > 0) {
+					if(cTake.getKey() instanceof AbstractHeatExchanger) {
+						final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+						c.tryAddHeat(removedHeat);
+					}
+					else if(cTake.getKey() instanceof AbstractHeatVent) {
+						final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+						c.tryAddHeat(removedHeat);
+					}
+					else if(cTake.getKey() instanceof AbstractCoolantCell) {
+						final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+						c.tryAddHeat(removedHeat);
+					}
+					if(!cTake.getKey().isAlive()) {
+						removeComponent(cTake.getKey());
 					}
 				}
 			}
 			// Hull exchange rate
+			// TODO: Doesn't quite behave the same as the above procedure, I think
 			// - see above procedure
-			final int summedHeat = reactorHeat + h.getDurability();
-			int reactorHeatFraction = reactorHeat / summedHeat;
-			int exchangerHeatFraction = h.getDurability() / summedHeat;
-			reactorHeatFraction = reactorHeatFraction * heatExch.getHullExchangeRate();
-			exchangerHeatFraction = exchangerHeatFraction * heatExch.getHullExchangeRate();
+			final int summedHeat = hullHeat + heatExch.getHeat();
+			int reactorHeatFraction = hullHeat / summedHeat;
+			int exchangerHeatFraction = heatExch.getHeat() / summedHeat;
+			reactorHeatFraction = reactorHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
+			exchangerHeatFraction = exchangerHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
 			// - move heat
-			reactorHeat -= reactorHeatFraction;
-			if(heatExch.tryAddHeat(reactorHeatFraction) == -1) {
-				removeComponent(h.getX(), h.getY());
-			}
+			hullHeat -= reactorHeatFraction;
+			hullHeat += exchangerHeatFraction;
 			heatExch.tryRemoveHeat(exchangerHeatFraction);
-			reactorHeat += exchangerHeatFraction;
+			heatExch.tryAddHeat(reactorHeatFraction);
+			if(!heatExch.isAlive()) {
+				removeComponent(heatExch);
+			}
 		}
-		// 5)
-		final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, reactorHeat);
-		for(IHeatVent vent : heatVents.getAll()) {
-			final ReactorComponent v = (ReactorComponent) vent;
+		// 4)
+		int totalHeatVented = 0;
+		final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, hullHeat);
+		for(AbstractHeatVent vent : heatVents.getAll()) {
 			// Hull vent rate
-			final int heatIntake = vent.getReactorVentRate() / hullHeatIntakeTotal;
-			if(vent.addHeat(heatIntake) == -1) {
-				removeComponent(v.getX(), v.getY());
+			final int heatIntake = (hullHeatIntakeTotal == 0) ? 0 : vent.getHULL_VENT_RATE() / hullHeatIntakeTotal;
+			vent.tryAddHeat(heatIntake);
+			if(!vent.isAlive()) {
+				removeComponent(vent);
 				continue;
 			}
 			// Component vent rate
-			final int ratePerSide = vent.getComponentVentRate() / heatVents.getMaxNeighbours(v.getX(), v.getY());
-			int componentHeatRemoved = 0;
-			for(IHeatExchanger c : heatExchangers.getNeighbours(v.getX(), v.getY())) {
+			final int ratePerSide = vent.getCOMPONENT_VENT_RATE() / heatVents.getMaxNeighbours(vent);
+			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(vent)) {
 				if(c != null) {
 					c.tryRemoveHeat(ratePerSide);
 				}
 			}
-			for(IHeatVent c : heatVents.getNeighbours(v.getX(), v.getY())) {
+			for(AbstractHeatVent c : heatVents.getNeighbours(vent)) {
 				if(c != null) {
-					c.removeHeat(ratePerSide);
+					c.tryRemoveHeat(ratePerSide);
 				}
 			}
-			for(ICoolantCell c : coolantCells.getNeighbours(v.getX(), v.getY())) {
+			for(AbstractCoolantCell c : coolantCells.getNeighbours(vent)) {
 				if(c != null) {
-					c.removeHeat(ratePerSide);
-				}
+					c.tryRemoveHeat(ratePerSide);				}
 			}
 			// Self vent rate
-			vent.removeHeat(vent.getSelfVentRate());
+			totalHeatVented += vent.tryRemoveHeat(vent.getSELF_VENT_RATE());
 		}
-		// 6)
-		for(ICoolantCell cool : coolantCells.getAll()) {
-			// passive
-		}
+		
+		currentOutputHeat = totalHeatVented;
 	}
 	
 	/**
@@ -346,26 +366,9 @@ public class Reactor {
 		// reset
 		hullVentingCapacity = 0;
 		
-		for(IHeatVent vent : heatVents.getAll()) {
-			hullVentingCapacity += vent.getReactorVentRate();
+		for(AbstractHeatVent vent : heatVents.getAll()) {
+			hullVentingCapacity += vent.getHULL_VENT_RATE();
 		}
 	}
 	
-	public enum ComponentList {
-		// Fuel rods
-		UraniumFuelRod, UraniumDualFuelRod, UraniumQuadFuelRod,
-		ThoriumFuelRod, ThoriumDualFuelRod, ThoriumQuadFuelRod,
-		
-		// Heat vents
-		HeatVent, AdvancedHeatVent, ReactorHeatVent, OverclockedHeatVent, ComponentHeatVent,
-		
-		// Heat exchanger
-		HeatExchanger, AdvancedHeatExchanger, ReactorHeatExchanger, ComponentHeatExchanger,
-		
-		// Coolant cells
-		CoolantCell10k,
-		
-		// Neutron reflector
-		NeutronReflector
-	}
 }
