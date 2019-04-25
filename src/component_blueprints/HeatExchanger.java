@@ -3,31 +3,26 @@ package component_blueprints;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-public class AbstractHeatExchanger extends ReactorComponent {
+public class HeatExchanger extends HeatManagementComponent {
 	
-	private final int HEAT_CAPACITY;
 	private final int COMPONENT_EXCHANGE_RATE;
 	private final int HULL_EXCHANGE_RATE;
-	
-	private int heat = 0;
-	
-	public AbstractHeatExchanger(int posX, int posY, 
+		
+	public HeatExchanger(int posX, int posY, 
 			int heatCapacity, 
 			int componentExchangeRate, int hullExchangeRate) {
 		
-		super(posX, posY);
+		super(posX, posY, heatCapacity);
 		
-		this.HEAT_CAPACITY = heatCapacity;
 		this.COMPONENT_EXCHANGE_RATE = componentExchangeRate;
 		this.HULL_EXCHANGE_RATE = hullExchangeRate;
 	}
 	
-	public AbstractHeatExchanger(int posX, int posY, 
+	public HeatExchanger(int posX, int posY, 
 			Integer[] data) {
 		
-		super(posX, posY);
+		super(posX, posY, data[0]);
 		
-		this.HEAT_CAPACITY = data[0];
 		this.COMPONENT_EXCHANGE_RATE = data[1];
 		this.HULL_EXCHANGE_RATE = data[2];
 	}
@@ -38,10 +33,6 @@ public class AbstractHeatExchanger extends ReactorComponent {
 	
 	public int getHULL_EXCHANGE_RATE() {
 		return HULL_EXCHANGE_RATE;
-	}
-	
-	public int getHeat() {
-		return heat;
 	}
 	
 	/**
@@ -65,35 +56,4 @@ public class AbstractHeatExchanger extends ReactorComponent {
 		return participants;
 	}
 	
-	/**
-	 * <b>MIGHT DESTROY COMPONENT!</b> <br>
-	 * Attempts to increase the component's heat.
-	 * @param delta : Positive change in heat (delta = natural number).
-	 * @return Amount of heat added
-	 */
-	public int tryAddHeat(int delta) {
-		if(delta <= 0) {
-			return 0;
-		}
-		final int heatChange = Math.min((HEAT_CAPACITY - heat), delta);
-		if(delta > heatChange) {
-			super.setDestroyed();
-		}
-		heat += heatChange;
-		return heatChange;
-	}
-	
-	/**
-	 * Attempts to decrease the component's heat.
-	 * @param delta : Negative change in heat (delta = natural number).
-	 * @return Amount of heat removed.
-	 */
-	public int tryRemoveHeat(int delta) {
-		if(delta <= 0) {
-			return 0;
-		}
-		final int heatChange = Math.min(heat, delta);
-		heat -= heatChange;
-		return heatChange;
-	}
 }

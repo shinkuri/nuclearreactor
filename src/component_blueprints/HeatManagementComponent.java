@@ -1,31 +1,22 @@
 package component_blueprints;
 
-public class AbstractCoolantCell extends ReactorComponent {
+public class HeatManagementComponent extends ReactorComponent {
 
 	private final int HEAT_CAPACITY;
 	
 	private int heat = 0;
 	
-	public AbstractCoolantCell(int posX, int posY,
-			int heatCapacity) {
+	protected HeatManagementComponent(int posX, int posY, int heatCapacity) {
 		
 		super(posX, posY);
 		
 		this.HEAT_CAPACITY = heatCapacity;
 	}
 	
-	public AbstractCoolantCell(int posX, int posY, 
-			Integer[] data) {
-		
-		super(posX, posY);
-		
-		this.HEAT_CAPACITY = data[0];
-	}
-	
 	public int getHeat() {
 		return heat;
 	}
-
+	
 	/**
 	 * <b>MIGHT DESTROY COMPONENT!</b> <br>
 	 * Attempts to increase the component's heat.
@@ -57,5 +48,5 @@ public class AbstractCoolantCell extends ReactorComponent {
 		heat -= heatChange;
 		return heatChange;
 	}
-	
+
 }

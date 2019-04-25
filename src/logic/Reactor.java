@@ -1,14 +1,16 @@
 package logic;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
-import component_blueprints.AbstractCoolantCell;
-import component_blueprints.AbstractDepletedFuelRod;
-import component_blueprints.AbstractFuelRod;
-import component_blueprints.AbstractHeatExchanger;
-import component_blueprints.AbstractHeatVent;
-import component_blueprints.AbstractNeutronReflector;
+import component_blueprints.CoolantCell;
+import component_blueprints.DepletedFuelRod;
+import component_blueprints.FuelRod;
+import component_blueprints.HeatExchanger;
+import component_blueprints.HeatManagementComponent;
+import component_blueprints.HeatVent;
+import component_blueprints.NeutronReflector;
 import component_blueprints.ReactorComponent;
 import logic.ComponentFactory.ComponentType;
 
@@ -20,12 +22,7 @@ public class Reactor implements Runnable{
 	private final ComponentFactory componentFactory = new ComponentFactory();
 	
 	private static final int EXPLOSION_THRESHOLD = 10000;
-	private static final int BURN_THRESHOLD = 7000;
-	private static final int RADIATION_THRESHOLD = 4000;
-	
-	private static final int EFFECT_RADIUS = 8; // Center is center of the 5x5x5 cube
-	private static final int EXPLOSION_STRENGTH = 1;
-	
+		
 	private StatusReport statusReport;
 	
 	private boolean isActive = false;
@@ -39,12 +36,12 @@ public class Reactor implements Runnable{
 	
 	private static final int SIZE_X = 9;
 	private static final int SIZE_Y = 6;
-	private final Grid<AbstractHeatVent> heatVents = new Grid<>(AbstractHeatVent.class, SIZE_X, SIZE_Y);
-	private final Grid<AbstractHeatExchanger> heatExchangers = new Grid<>(AbstractHeatExchanger.class, SIZE_X, SIZE_Y);
-	private final Grid<AbstractFuelRod> fuelRods = new Grid<>(AbstractFuelRod.class, SIZE_X, SIZE_Y);
-	private final Grid<AbstractDepletedFuelRod> depletedRods = new Grid<>(AbstractDepletedFuelRod.class, SIZE_X, SIZE_Y);
-	private final Grid<AbstractNeutronReflector> neutronReflectors = new Grid<>(AbstractNeutronReflector.class, SIZE_X, SIZE_Y);
-	private final Grid<AbstractCoolantCell> coolantCells = new Grid<>(AbstractCoolantCell.class, SIZE_X, SIZE_Y);
+	private final Grid<HeatVent> heatVents = new Grid<>(HeatVent.class, SIZE_X, SIZE_Y);
+	private final Grid<HeatExchanger> heatExchangers = new Grid<>(HeatExchanger.class, SIZE_X, SIZE_Y);
+	private final Grid<FuelRod> fuelRods = new Grid<>(FuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<DepletedFuelRod> depletedRods = new Grid<>(DepletedFuelRod.class, SIZE_X, SIZE_Y);
+	private final Grid<NeutronReflector> neutronReflectors = new Grid<>(NeutronReflector.class, SIZE_X, SIZE_Y);
+	private final Grid<CoolantCell> coolantCells = new Grid<>(CoolantCell.class, SIZE_X, SIZE_Y);
 	
 	@Override
 	public void run() {
@@ -80,22 +77,22 @@ public class Reactor implements Runnable{
 	
 	public void insertComponent(ComponentType type, int posX, int posY) {
 		final ReactorComponent rc = componentFactory.generateComponent(type, posX, posY);
-		if(rc instanceof AbstractHeatVent) {
+		if(rc instanceof HeatVent) {
 			heatVents.put(rc);
 		}
-		else if(rc instanceof AbstractHeatExchanger) {
+		else if(rc instanceof HeatExchanger) {
 			heatExchangers.put(rc);
 		}
-		else if(rc instanceof AbstractFuelRod) {
+		else if(rc instanceof FuelRod) {
 			fuelRods.put(rc);
 		}
-		else if(rc instanceof AbstractDepletedFuelRod) {
+		else if(rc instanceof DepletedFuelRod) {
 			depletedRods.put(rc);
 		}
-		else if(rc instanceof AbstractNeutronReflector) {
+		else if(rc instanceof NeutronReflector) {
 			neutronReflectors.put(rc);
 		}
-		else if(rc instanceof AbstractCoolantCell) {
+		else if(rc instanceof CoolantCell) {
 			coolantCells.put(rc);
 		}
 		// Update cache
@@ -109,26 +106,26 @@ public class Reactor implements Runnable{
 	public void removeComponent(ReactorComponent rc) {
 		System.out.println("removed component " +rc.getX() +"/" +rc.getY());
 		// TODO: Fix this really dumb way to remove components.
-		if(rc instanceof AbstractNeutronReflector) {			
+		if(rc instanceof NeutronReflector) {			
 			neutronReflectors.remove(rc);
 		}
-		else if(rc instanceof AbstractHeatVent) {
-			AbstractHeatVent c = (AbstractHeatVent) rc;
+		else if(rc instanceof HeatVent) {
+			HeatVent c = (HeatVent) rc;
 			hullHeat += c.getHeat();
 			heatVents.remove(rc);
 		}
-		else if(rc instanceof AbstractHeatExchanger) {
-			AbstractHeatExchanger c = (AbstractHeatExchanger) rc;
+		else if(rc instanceof HeatExchanger) {
+			HeatExchanger c = (HeatExchanger) rc;
 			hullHeat += c.getHeat();
 			heatExchangers.remove(rc);
 		}
-		else if(rc instanceof AbstractCoolantCell) {
-			AbstractCoolantCell c = (AbstractCoolantCell) rc;
+		else if(rc instanceof CoolantCell) {
+			CoolantCell c = (CoolantCell) rc;
 			hullHeat += c.getHeat();
 			coolantCells.remove(rc);
 		}
-		else if(rc instanceof AbstractFuelRod) {
-			AbstractFuelRod c = (AbstractFuelRod) rc;
+		else if(rc instanceof FuelRod) {
+			FuelRod c = (FuelRod) rc;
 			depletedRods.put(componentFactory.generateComponent(c.getDepletedRod(), c.getX(), c.getY()));
 			fuelRods.remove(rc);
 		}
@@ -137,12 +134,6 @@ public class Reactor implements Runnable{
 	}
 	
 	public void tick(StatusReport statusReport) {
-		if(hullHeat >= RADIATION_THRESHOLD) {
-			// Apply radiation & nausea effect
-		}
-		if(hullHeat >= BURN_THRESHOLD) {
-			// Set nearby entities on fire
-		}
 		if(hullHeat >= EXPLOSION_THRESHOLD) {
 			// BOOM
 		}
@@ -152,11 +143,6 @@ public class Reactor implements Runnable{
 			statusReport.setHullHeat(hullHeat);
 			statusReport.setCurrentEUt(currentOutputEU / 20);
 			statusReport.setCurrentHUs(currentOutputHeat);
-			if(isEUMode) {
-				// push EU to dynamo hatch
-			} else {
-				// push heat to either heat hatch or convert cooling fluid
-			}
 		}
 	}
 	
@@ -174,8 +160,8 @@ public class Reactor implements Runnable{
 		currentOutputHeat = 0;
 		
 		// 1)
-		for(AbstractNeutronReflector refl : neutronReflectors.getAll()) {
-			for(AbstractFuelRod c : fuelRods.getNeighbours(refl)) {
+		for(NeutronReflector refl : neutronReflectors.getAll()) {
+			for(FuelRod c : fuelRods.getNeighbours(refl)) {
 				if(c != null) {
 					refl.applyReflectedPulses(c);
 					if(!refl.isAlive()) {
@@ -185,21 +171,25 @@ public class Reactor implements Runnable{
 				}
 			}
 		}
-		for(AbstractFuelRod rod: fuelRods.getAll()) {
-			for(AbstractFuelRod c : fuelRods.getNeighbours(rod)) {
+		for(FuelRod rod: fuelRods.getAll()) {
+			for(FuelRod c : fuelRods.getNeighbours(rod)) {
 				if(c != null) {
 					c.addNeutronPulse(rod.getNEUTRON_PULSES_EMITTED());					
 				}
 			}
 		}
 		// 2)
-		for(AbstractFuelRod rod : fuelRods.getAll()) {
+		for(FuelRod rod : fuelRods.getAll()) {
 			currentOutputEU += rod.getElectricityPerSecond(hullHeat, EXPLOSION_THRESHOLD);
 			
 			int heat = rod.getHeatPerSecond(hullHeat, EXPLOSION_THRESHOLD);
-			final int heatPerSide = heat / fuelRods.getMaxNeighbours(rod);
-			
-			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(rod)) {
+			final int heatPerSide = heat / fuelRods.getNeighbours(rod).size();
+			// THIS...
+			final HashSet<HeatManagementComponent> heatComponents = new HashSet<>();
+			heatComponents.addAll(heatExchangers.getAll());
+			heatComponents.addAll(heatVents.getAll());
+			heatComponents.addAll(coolantCells.getAll());
+			for(HeatManagementComponent c : heatComponents) {
 				if(c != null) {
 					heat -= c.tryAddHeat(heatPerSide);
 					if(!c.isAlive()) {
@@ -207,7 +197,8 @@ public class Reactor implements Runnable{
 					}
 				}
 			}
-			for(AbstractHeatVent c : heatVents.getNeighbours(rod)) {
+			// SHOULD REPLACE THIS:
+			for(HeatExchanger c : heatExchangers.getNeighbours(rod)) {
 				if(c != null) {
 					heat -= c.tryAddHeat(heatPerSide);
 					if(!c.isAlive()) {
@@ -215,7 +206,15 @@ public class Reactor implements Runnable{
 					}
 				}
 			}
-			for(AbstractCoolantCell c : coolantCells.getNeighbours(rod)) {
+			for(HeatVent c : heatVents.getNeighbours(rod)) {
+				if(c != null) {
+					heat -= c.tryAddHeat(heatPerSide);
+					if(!c.isAlive()) {
+						removeComponent(c);
+					}
+				}
+			}
+			for(CoolantCell c : coolantCells.getNeighbours(rod)) {
 				if(c != null) {
 					heat -= c.tryAddHeat(heatPerSide);
 					if(!c.isAlive()) {
@@ -230,22 +229,22 @@ public class Reactor implements Runnable{
 			}
 		}
 		// 3)
-		for(AbstractHeatExchanger heatExch : heatExchangers.getAll()) {
+		for(HeatExchanger heatExch : heatExchangers.getAll()) {
 			// Component exchange rate
 			// - get heat of all adjacent components
 			HashMap<ReactorComponent, Double> targets = new HashMap<>();
 			targets.put(heatExch, (double) heatExch.getHeat());
-			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(heatExch)) {
+			for(HeatExchanger c : heatExchangers.getNeighbours(heatExch)) {
 				if(c != null) {
 					targets.put(c, (double) c.getHeat());
 				}
 			}
-			for(AbstractHeatVent c : heatVents.getNeighbours(heatExch)) {
+			for(HeatVent c : heatVents.getNeighbours(heatExch)) {
 				if(c != null) {
 					targets.put(c, (double) c.getHeat());
 				}
 			}
-			for(AbstractCoolantCell c : coolantCells.getNeighbours(heatExch)) {
+			for(CoolantCell c : coolantCells.getNeighbours(heatExch)) {
 				if(c != null) {
 					targets.put(c, (double) c.getHeat());
 				}
@@ -257,31 +256,31 @@ public class Reactor implements Runnable{
 			for(Entry<ReactorComponent, Double> cTake : targets.entrySet()) {
 				// Take heat from the currently processed component
 				int removedHeat = 0;
-				if(cTake.getKey() instanceof AbstractHeatExchanger) {
-					final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+				if(cTake.getKey() instanceof HeatExchanger) {
+					final HeatExchanger c = (HeatExchanger) cTake.getKey();
 					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
 				}
-				else if(cTake.getKey() instanceof AbstractHeatVent) {
-					final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+				else if(cTake.getKey() instanceof HeatVent) {
+					final HeatVent c = (HeatVent) cTake.getKey();
 					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
 				}
-				else if(cTake.getKey() instanceof AbstractCoolantCell) {
-					final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+				else if(cTake.getKey() instanceof CoolantCell) {
+					final CoolantCell c = (CoolantCell) cTake.getKey();
 					removedHeat = c.tryRemoveHeat(cTake.getValue().intValue());
 				}
 				// Try to distribute all the heat that was taken
 				for(Entry<ReactorComponent, Double> cDist : targets.entrySet()) {
 					if(!cDist.getKey().equals(cTake.getKey())) {
-						if(cDist.getKey() instanceof AbstractHeatExchanger) {
-							final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+						if(cDist.getKey() instanceof HeatExchanger) {
+							final HeatExchanger c = (HeatExchanger) cTake.getKey();
 							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
 						}
-						else if(cDist.getKey() instanceof AbstractHeatVent) {
-							final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+						else if(cDist.getKey() instanceof HeatVent) {
+							final HeatVent c = (HeatVent) cTake.getKey();
 							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
 						}
-						else if(cDist.getKey() instanceof AbstractCoolantCell) {
-							final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+						else if(cDist.getKey() instanceof CoolantCell) {
+							final CoolantCell c = (CoolantCell) cTake.getKey();
 							removedHeat -= c.tryAddHeat(removedHeat / (targets.size() - 1));
 						}
 						if(!cDist.getKey().isAlive()) {
@@ -291,16 +290,16 @@ public class Reactor implements Runnable{
 				}
 				// Add heat that couldn't be distributed back to the source component
 				if(removedHeat > 0) {
-					if(cTake.getKey() instanceof AbstractHeatExchanger) {
-						final AbstractHeatExchanger c = (AbstractHeatExchanger) cTake.getKey();
+					if(cTake.getKey() instanceof HeatExchanger) {
+						final HeatExchanger c = (HeatExchanger) cTake.getKey();
 						c.tryAddHeat(removedHeat);
 					}
-					else if(cTake.getKey() instanceof AbstractHeatVent) {
-						final AbstractHeatVent c = (AbstractHeatVent) cTake.getKey();
+					else if(cTake.getKey() instanceof HeatVent) {
+						final HeatVent c = (HeatVent) cTake.getKey();
 						c.tryAddHeat(removedHeat);
 					}
-					else if(cTake.getKey() instanceof AbstractCoolantCell) {
-						final AbstractCoolantCell c = (AbstractCoolantCell) cTake.getKey();
+					else if(cTake.getKey() instanceof CoolantCell) {
+						final CoolantCell c = (CoolantCell) cTake.getKey();
 						c.tryAddHeat(removedHeat);
 					}
 					if(!cTake.getKey().isAlive()) {
@@ -328,7 +327,7 @@ public class Reactor implements Runnable{
 		// 4)
 		int totalHeatVented = 0;
 		final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, hullHeat);
-		for(AbstractHeatVent vent : heatVents.getAll()) {
+		for(HeatVent vent : heatVents.getAll()) {
 			// Hull vent rate
 			final int heatIntake = (hullHeatIntakeTotal == 0) ? 0 : vent.getHULL_VENT_RATE() / hullHeatIntakeTotal;
 			vent.tryAddHeat(heatIntake);
@@ -338,17 +337,17 @@ public class Reactor implements Runnable{
 			}
 			// Component vent rate
 			final int ratePerSide = vent.getCOMPONENT_VENT_RATE() / heatVents.getMaxNeighbours(vent);
-			for(AbstractHeatExchanger c : heatExchangers.getNeighbours(vent)) {
+			for(HeatExchanger c : heatExchangers.getNeighbours(vent)) {
 				if(c != null) {
 					c.tryRemoveHeat(ratePerSide);
 				}
 			}
-			for(AbstractHeatVent c : heatVents.getNeighbours(vent)) {
+			for(HeatVent c : heatVents.getNeighbours(vent)) {
 				if(c != null) {
 					c.tryRemoveHeat(ratePerSide);
 				}
 			}
-			for(AbstractCoolantCell c : coolantCells.getNeighbours(vent)) {
+			for(CoolantCell c : coolantCells.getNeighbours(vent)) {
 				if(c != null) {
 					c.tryRemoveHeat(ratePerSide);				}
 			}
@@ -366,7 +365,7 @@ public class Reactor implements Runnable{
 		// reset
 		hullVentingCapacity = 0;
 		
-		for(AbstractHeatVent vent : heatVents.getAll()) {
+		for(HeatVent vent : heatVents.getAll()) {
 			hullVentingCapacity += vent.getHULL_VENT_RATE();
 		}
 	}

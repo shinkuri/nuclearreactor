@@ -2,11 +2,11 @@ package component_blueprints;
 
 import logic.ComponentFactory.ComponentType;
 
-public class AbstractDepletedFuelRod extends ReactorComponent {
+public class DepletedFuelRod extends ReactorComponent {
 	
 	private final ComponentType DEPLETED_TYPE;
 	
-	public AbstractDepletedFuelRod(int posX, int posY, 
+	public DepletedFuelRod(int posX, int posY, 
 			ComponentType depletedType) {
 		
 		super(posX, posY);

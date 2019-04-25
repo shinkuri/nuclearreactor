@@ -1,12 +1,12 @@
 package component_blueprints;
 
-public class AbstractNeutronReflector extends ReactorComponent {
+public class NeutronReflector extends ReactorComponent {
 
 	private final int DURABILITY;	
 	
 	private int durability;
 	
-	public AbstractNeutronReflector(int posX, int posY,
+	public NeutronReflector(int posX, int posY,
 			int durability) {
 		
 		super(posX, posY);
@@ -16,7 +16,7 @@ public class AbstractNeutronReflector extends ReactorComponent {
 		durability = DURABILITY;
 	}
 	
-	public AbstractNeutronReflector(int posX, int posY, 
+	public NeutronReflector(int posX, int posY, 
 			Integer[] data) {
 		
 		super(posX, posY);
@@ -26,7 +26,7 @@ public class AbstractNeutronReflector extends ReactorComponent {
 		durability = DURABILITY;
 	}
 	
-	public void applyReflectedPulses(AbstractFuelRod fuelRod) {
+	public void applyReflectedPulses(FuelRod fuelRod) {
 		fuelRod.addNeutronPulse(fuelRod.getNEUTRON_PULSES_EMITTED());
 		durability -= fuelRod.getNEUTRON_PULSES_EMITTED();
 		if(durability <= 0) {

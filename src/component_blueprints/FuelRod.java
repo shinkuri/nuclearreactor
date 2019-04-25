@@ -11,7 +11,7 @@ import logic.ComponentFactory.ComponentType;
  * @author Kekzdealer
  *
  */
-public class AbstractFuelRod extends ReactorComponent {
+public class FuelRod extends ReactorComponent {
 	
 	private static final int HEAT_PER_PULSE = 4;
 	private static final int EU_PER_PULSE = 5;
@@ -29,7 +29,7 @@ public class AbstractFuelRod extends ReactorComponent {
 	private int remainingLifetime;
 	private int pulsesReceived = 0;
 	
-	public AbstractFuelRod(int posX, int posY, 
+	public FuelRod(int posX, int posY, 
 			int lifeTime, ComponentType depletedType, 
 			int heatPerSecond, int heatBoostRate, int euPerSecond, int euBoostRate,
 			int neutronPulsesEmitted) {
@@ -47,7 +47,7 @@ public class AbstractFuelRod extends ReactorComponent {
 		remainingLifetime = LIFETIME;
 	}
 	
-	public AbstractFuelRod(int posX, int posY, 
+	public FuelRod(int posX, int posY, 
 			ComponentType depletedType, 
 			Integer[] data) {
 		

@@ -2,12 +2,12 @@ package logic;
 
 import java.util.HashMap;
 
-import component_blueprints.AbstractCoolantCell;
-import component_blueprints.AbstractDepletedFuelRod;
-import component_blueprints.AbstractFuelRod;
-import component_blueprints.AbstractHeatExchanger;
-import component_blueprints.AbstractHeatVent;
-import component_blueprints.AbstractNeutronReflector;
+import component_blueprints.CoolantCell;
+import component_blueprints.DepletedFuelRod;
+import component_blueprints.FuelRod;
+import component_blueprints.HeatExchanger;
+import component_blueprints.HeatVent;
+import component_blueprints.NeutronReflector;
 import component_blueprints.ReactorComponent;
 
 public class ComponentFactory {
@@ -118,42 +118,42 @@ public class ComponentFactory {
 		case ComponentHeatVent:
 		case ReactorHeatVent:
 		case OverclockedHeatVent:
-			rc = new AbstractHeatVent(posX, posY, data);
+			rc = new HeatVent(posX, posY, data);
 			break;
 			
 		case T1HeatExchanger:
 		case T2HeatExchanger:
 		case ComponentHeatExchanger:
 		case ReactorHeatExchanger:
-			rc = new AbstractHeatExchanger(posX, posY, data);
+			rc = new HeatExchanger(posX, posY, data);
 			break;
 			
 		case UraniumFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedUraniumFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedUraniumFuelRod, data);
 			break;
 		case UraniumDualFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedUraniumDualFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedUraniumDualFuelRod, data);
 			break;
 		case UraniumQuadFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedUraniumQuadFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedUraniumQuadFuelRod, data);
 			break;
 		case ThoriumFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedThoriumFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedThoriumFuelRod, data);
 			break;
 		case ThoriumDualFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedThoriumDualFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedThoriumDualFuelRod, data);
 			break;
 		case ThoriumQuadFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedThoriumQuadFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedThoriumQuadFuelRod, data);
 			break;
 		case MOXUraniumFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedMOXUraniumFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedMOXUraniumFuelRod, data);
 			break;
 		case MOXUraniumDualFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedMOXUraniumDualFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedMOXUraniumDualFuelRod, data);
 			break;
 		case MOXUraniumQuadFuelRod:
-			rc = new AbstractFuelRod(posX, posY, ComponentType.DepletedMOXUraniumQuadFuelRod, data);
+			rc = new FuelRod(posX, posY, ComponentType.DepletedMOXUraniumQuadFuelRod, data);
 			break;
 			
 		case DepletedUraniumFuelRod:
@@ -165,15 +165,15 @@ public class ComponentFactory {
 		case DepletedMOXUraniumFuelRod:
 		case DepletedMOXUraniumDualFuelRod:
 		case DepletedMOXUraniumQuadFuelRod:
-			rc = new AbstractDepletedFuelRod(posX, posY, type);
+			rc = new DepletedFuelRod(posX, posY, type);
 			break;
 			
 		case T1NeutronReflector:
-			rc = new AbstractNeutronReflector(posX, posY, data);
+			rc = new NeutronReflector(posX, posY, data);
 			break;
 		
 		case CoolantCell10k:
-			rc = new AbstractCoolantCell(posX, posY, data);
+			rc = new CoolantCell(posX, posY, data);
 			break;
 		}
 		return rc;
