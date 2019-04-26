@@ -43,12 +43,12 @@ public class HeatExchanger extends HeatManagementComponent {
 	 * @param participants : The heat exchanger itself and up to four surrounding components
 	 * @return A map with each participant and the throughput it got assigned
 	 */
-	public HashMap<ReactorComponent, Double> calculateFractionsOfThrougput(HashMap<ReactorComponent, Double> participants) {
+	public HashMap<HeatManagementComponent, Double> calculateFractionsOfThrougput(HashMap<HeatManagementComponent, Double> participants) {
 		double summedHeat = 0;
 		for(Double i : participants.values()) {
 			summedHeat += i;
 		}
-		for(Entry<ReactorComponent, Double> i : participants.entrySet()) {
+		for(Entry<HeatManagementComponent, Double> i : participants.entrySet()) {
 			final double fractionOfTotalHeat = i.getValue() / summedHeat;
 			final double fractionOfThroughput = fractionOfTotalHeat * COMPONENT_EXCHANGE_RATE;
 			participants.put(i.getKey(), fractionOfThroughput);

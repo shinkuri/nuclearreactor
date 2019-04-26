@@ -54,7 +54,6 @@ public class FuelRod extends ReactorComponent {
 		super(posX, posY);
 		
 		this.LIFETIME = data[0];
-		System.out.println(LIFETIME);
 		this.DEPLETED_TYPE = depletedType;
 		this.HEAT_PER_SECOND = data[1];
 		this.HEAT_BOOST_RATE = data[2];
