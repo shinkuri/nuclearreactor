@@ -13,6 +13,10 @@ public class HeatManagementComponent extends ReactorComponent {
 		this.HEAT_CAPACITY = heatCapacity;
 	}
 	
+	public int getHEAT_CAPACITY() {
+		return HEAT_CAPACITY;
+	}
+	
 	public int getHeat() {
 		return heat;
 	}

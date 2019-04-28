@@ -64,6 +64,14 @@ public class FuelRod extends ReactorComponent {
 		remainingLifetime = LIFETIME;
 	}
 	
+	public int getLIFETIME() {
+		return LIFETIME;
+	}
+	
+	public int getRemainingLifetime() {
+		return remainingLifetime;
+	}
+	
 	public ComponentSubType getDepletedRod() {
 		return DEPLETED_TYPE;
 	}
@@ -77,13 +85,13 @@ public class FuelRod extends ReactorComponent {
 	}
 	
 	public int getHeatPerSecond(int hullHeat, int hullHeatMax) {
-		final double heatBoost = ((HEAT_BOOST_RATE - 1) / Math.pow(hullHeatMax, 2)) * Math.pow(hullHeat, 2) + 1;
+		final double heatBoost = ((HEAT_BOOST_RATE - 1) / Math.pow(hullHeatMax, 2)) * Math.pow(hullHeat, 2) + 1.0D;
 		final int heat = (int) heatBoost * (HEAT_PER_SECOND + (pulsesReceived * HEAT_PER_PULSE));
 		return heat;
 	}
 	
 	public int getElectricityPerSecond(int hullHeat, int hullHeatMax) {
-		final double heatBoost = ((EU_BOOST_RATE - 1) / Math.pow(hullHeatMax, 2)) * Math.pow(hullHeat, 2) + 1;
+		final double heatBoost = ((EU_BOOST_RATE - 1) / Math.pow(hullHeatMax, 2)) * Math.pow(hullHeat, 2) + 1.0D;
 		final int eu = (int) heatBoost * (EU_PER_SECOND + (pulsesReceived * EU_PER_PULSE));
 		return eu;
 	}

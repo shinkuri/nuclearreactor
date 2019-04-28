@@ -26,6 +26,14 @@ public class NeutronReflector extends ReactorComponent {
 		durability = DURABILITY;
 	}
 	
+	public int getDURABILITY() {
+		return DURABILITY;
+	}
+	
+	public int getDurability() {
+		return durability;
+	}
+	
 	public void applyReflectedPulses(FuelRod fuelRod) {
 		fuelRod.addNeutronPulse(fuelRod.getNEUTRON_PULSES_EMITTED());
 		durability -= fuelRod.getNEUTRON_PULSES_EMITTED();
