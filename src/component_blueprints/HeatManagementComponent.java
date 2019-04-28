@@ -6,9 +6,9 @@ public class HeatManagementComponent extends ReactorComponent {
 	
 	private int heat = 0;
 	
-	protected HeatManagementComponent(int posX, int posY, int heatCapacity) {
+	protected HeatManagementComponent(ComponentType type, int posX, int posY, int heatCapacity) {
 		
-		super(posX, posY);
+		super(type, posX, posY);
 		
 		this.HEAT_CAPACITY = heatCapacity;
 	}

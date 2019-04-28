@@ -12,7 +12,7 @@ public class HeatExchanger extends HeatManagementComponent {
 			int heatCapacity, 
 			int componentExchangeRate, int hullExchangeRate) {
 		
-		super(posX, posY, heatCapacity);
+		super(ComponentType.HeatExchanger, posX, posY, heatCapacity);
 		
 		this.COMPONENT_EXCHANGE_RATE = componentExchangeRate;
 		this.HULL_EXCHANGE_RATE = hullExchangeRate;
@@ -21,7 +21,7 @@ public class HeatExchanger extends HeatManagementComponent {
 	public HeatExchanger(int posX, int posY, 
 			Integer[] data) {
 		
-		super(posX, posY, data[0]);
+		super(ComponentType.HeatExchanger, posX, posY, data[0]);
 		
 		this.COMPONENT_EXCHANGE_RATE = data[1];
 		this.HULL_EXCHANGE_RATE = data[2];

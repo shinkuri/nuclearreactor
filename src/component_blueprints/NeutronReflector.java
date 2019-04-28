@@ -9,7 +9,7 @@ public class NeutronReflector extends ReactorComponent {
 	public NeutronReflector(int posX, int posY,
 			int durability) {
 		
-		super(posX, posY);
+		super(ComponentType.NeutronReflector, posX, posY);
 		
 		this.DURABILITY = durability;
 		
@@ -19,7 +19,7 @@ public class NeutronReflector extends ReactorComponent {
 	public NeutronReflector(int posX, int posY, 
 			Integer[] data) {
 		
-		super(posX, posY);
+		super(ComponentType.NeutronReflector, posX, posY);
 		
 		this.DURABILITY = data[0];
 		

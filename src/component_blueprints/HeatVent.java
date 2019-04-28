@@ -1,5 +1,6 @@
 package component_blueprints;
 
+
 public class HeatVent extends HeatManagementComponent {
 	
 	private final int COMPONENT_VENT_RATE;
@@ -11,7 +12,7 @@ public class HeatVent extends HeatManagementComponent {
 			int heatCapacity, 
 			int componentVentRate, int hullVentRate, int selfVentRate) {
 		
-		super(posX, posY, heatCapacity);
+		super(ComponentType.HeatVent, posX, posY, heatCapacity);
 		
 		this.COMPONENT_VENT_RATE = componentVentRate;
 		this.HULL_VENT_RATE = hullVentRate;
@@ -22,7 +23,7 @@ public class HeatVent extends HeatManagementComponent {
 	public HeatVent(int posX, int posY, 
 			Integer[] data) {
 		
-		super(posX, posY, data[0]);
+		super(ComponentType.HeatVent, posX, posY, data[0]);
 		
 		this.COMPONENT_VENT_RATE = data[1];
 		this.HULL_VENT_RATE = data[2];

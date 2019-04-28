@@ -11,12 +11,24 @@ package component_blueprints;
  */
 public abstract class ReactorComponent {
 	
+	public enum ComponentType {
+		FuelRod,
+		DepletedFuelRod,
+		NeutronReflector,
+		CoolantCell,
+		HeatExchanger,
+		HeatVent
+	}
+	
+	private final ComponentType type;
+	
 	private final int posX;
 	private final int posY;
 
 	protected boolean alive = true;
 	
-	protected ReactorComponent(int posX, int posY) {
+	protected ReactorComponent(ComponentType type, int posX, int posY) {
+		this.type = type;
 		this.posX = posX;
 		this.posY = posY;
 	}
@@ -37,6 +49,10 @@ public abstract class ReactorComponent {
 		} else {
 			return false;
 		}
+	}
+	
+	public ComponentType getType() {
+		return type;
 	}
 	
 	public int getX() {

@@ -1,20 +1,20 @@
 package component_blueprints;
 
-import logic.ComponentFactory.ComponentType;
+import logic.ComponentFactory.ComponentSubType;
 
 public class DepletedFuelRod extends ReactorComponent {
 	
-	private final ComponentType DEPLETED_TYPE;
+	private final ComponentSubType DEPLETED_TYPE;
 	
 	public DepletedFuelRod(int posX, int posY, 
-			ComponentType depletedType) {
+			ComponentSubType depletedType) {
 		
-		super(posX, posY);
+		super(ComponentType.DepletedFuelRod, posX, posY);
 		
 		this.DEPLETED_TYPE = depletedType;
 	}
 	
-	public ComponentType getDepletedRod() {
+	public ComponentSubType getDepletedRod() {
 		return DEPLETED_TYPE;
 	}
 

@@ -1,6 +1,6 @@
 package component_blueprints;
 
-import logic.ComponentFactory.ComponentType;
+import logic.ComponentFactory.ComponentSubType;
 
 /**
  * Fuel rods and MOX fuel rods.
@@ -17,7 +17,7 @@ public class FuelRod extends ReactorComponent {
 	private static final int EU_PER_PULSE = 5;
 	
 	private final int LIFETIME;
-	private final ComponentType DEPLETED_TYPE;
+	private final ComponentSubType DEPLETED_TYPE;
 	
 	private final int HEAT_PER_SECOND;
 	private final int HEAT_BOOST_RATE;
@@ -30,11 +30,11 @@ public class FuelRod extends ReactorComponent {
 	private int pulsesReceived = 0;
 	
 	public FuelRod(int posX, int posY, 
-			int lifeTime, ComponentType depletedType, 
+			int lifeTime, ComponentSubType depletedType, 
 			int heatPerSecond, int heatBoostRate, int euPerSecond, int euBoostRate,
 			int neutronPulsesEmitted) {
 		
-		super(posX, posY);
+		super(ComponentType.FuelRod, posX, posY);
 		
 		this.LIFETIME = lifeTime;
 		this.DEPLETED_TYPE = depletedType;
@@ -48,10 +48,10 @@ public class FuelRod extends ReactorComponent {
 	}
 	
 	public FuelRod(int posX, int posY, 
-			ComponentType depletedType, 
+			ComponentSubType depletedType, 
 			Integer[] data) {
 		
-		super(posX, posY);
+		super(ComponentType.FuelRod, posX, posY);
 		
 		this.LIFETIME = data[0];
 		this.DEPLETED_TYPE = depletedType;
@@ -64,7 +64,7 @@ public class FuelRod extends ReactorComponent {
 		remainingLifetime = LIFETIME;
 	}
 	
-	public ComponentType getDepletedRod() {
+	public ComponentSubType getDepletedRod() {
 		return DEPLETED_TYPE;
 	}
 	
