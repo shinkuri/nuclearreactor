@@ -2,6 +2,7 @@ package logic;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import component_blueprints.CoolantCell;
@@ -243,11 +244,11 @@ public class Reactor implements Runnable{
 				neighbourCount += heatVents.getNeighbours(rod).size();
 				neighbourCount += heatExchangers.getNeighbours(rod).size();
 				neighbourCount += coolantCells.getNeighbours(rod).size();
-				final int heatPerSide = heat / neighbourCount;
+				final int heatPerSide = (neighbourCount > 0) ? (heat / neighbourCount) : heat;
 				
 				final HashSet<HeatManagementComponent> heatComponents = new HashSet<>();
-				heatComponents.addAll(heatExchangers.getNeighbours(rod));
 				heatComponents.addAll(heatVents.getNeighbours(rod));
+				heatComponents.addAll(heatExchangers.getNeighbours(rod));
 				heatComponents.addAll(coolantCells.getNeighbours(rod));
 				for(HeatManagementComponent c : heatComponents) {
 					if(c != null) {
@@ -259,7 +260,6 @@ public class Reactor implements Runnable{
 				}
 				
 				hullHeat += heat;
-				System.out.println("Added hullHeat: " +heat);
 				rod.use();
 				if(!rod.isAlive()) {
 					removeComponent(rod);

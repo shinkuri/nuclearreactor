@@ -15,6 +15,11 @@ public class Grid<E extends ReactorComponent> {
         @SuppressWarnings("unchecked")
         final E[][] a = (E[][]) Array.newInstance(type, sizeX, sizeY);
         this.grid = a;
+        for(int x = 0; x < grid.length; x++) {
+        	for(int y = 0; y < grid[0].length; y++) {
+        		grid[x][y] = null;
+        	}
+        }
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -86,16 +91,28 @@ public class Grid<E extends ReactorComponent> {
 			final int y = rc.getY();
 			HashSet<E> neighbours = new HashSet<>();
 			if(y > 0) {
-				neighbours.add(grid[x][y - 1]);
+				final E e = grid[x][y - 1];
+				if(e != null) {
+					neighbours.add(e);
+				}
 			}
 			if(x < (grid.length - 1)) {
-				neighbours.add(grid[x + 1][y]);
+				final E e = grid[x + 1][y];
+				if(e != null) {
+					neighbours.add(e);
+				}
 			}
 			if(y < (grid[0].length - 1)) {
-				neighbours.add(grid[x][y + 1]);
+				final E e = grid[x][y + 1];
+				if(e != null) {
+					neighbours.add(e);
+				}
 			}
 			if(x > 0) {
-				neighbours.add(grid[x - 1][y]);
+				final E e = grid[x - 1][y];
+				if(e != null) {
+					neighbours.add(e);
+				}
 			}
 			return neighbours;			
 		}
