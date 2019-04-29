@@ -217,6 +217,9 @@ public class Reactor implements Runnable{
 		
 		synchronized(componentLock) {
 		// 1)
+			for(FuelRod rod : fuelRods.getAll()) {
+				rod.resetNeutronPulses();
+			}
 			for(NeutronReflector refl : neutronReflectors.getAll()) {
 				for(FuelRod c : fuelRods.getNeighbours(refl)) {
 					if(c != null) {
@@ -333,22 +336,26 @@ public class Reactor implements Runnable{
 				}
 			}
 		// 4)
-			int hullHeatVented = 0;
-			int componentHeatVented = 0;
+			int totalSelfVent = 0;
+			int totalCompHeatVented = 0;
 			
 			final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, hullHeat);
 			for(HeatVent vent : heatVents.getAll()) {
 				// Hull vent rate
 				if(vent.getHULL_VENT_RATE() > 0) {
 					final int heatIntake = (vent.getHULL_VENT_RATE() / hullVentingCapacity) * hullHeatIntakeTotal;
-					System.out.println("Vent took in hull heat: " +heatIntake);
-					vent.tryAddHeat(heatIntake);
+					System.out.println("heat intake: " +heatIntake);
+					final int hullHeatTaken = vent.tryAddHeat(heatIntake);
+					System.out.println("heat intaken: " +hullHeatTaken);
+					hullHeat -= hullHeatTaken;
+					vent.setHullHeatDrawn(hullHeatTaken);
 					if(!vent.isAlive()) {
 						removeComponent(vent);
 						continue;
 					}				
 				}
 				// Component vent rate
+				int componentHeatVented = 0;
 				if(vent.getCOMPONENT_VENT_RATE() > 0) {
 					final int ratePerSide = vent.getCOMPONENT_VENT_RATE() / heatVents.getMaxNeighbours(vent);
 					for(HeatExchanger c : heatExchangers.getNeighbours(vent)) {
@@ -366,11 +373,16 @@ public class Reactor implements Runnable{
 							componentHeatVented += c.tryRemoveHeat(ratePerSide);				}
 					}				
 				}
+				vent.setComponentHeatVented(componentHeatVented);
+				totalCompHeatVented += componentHeatVented;
 				// Self vent rate
-				hullHeatVented += vent.tryRemoveHeat(vent.getSELF_VENT_RATE());
+				final int selfVent = vent.tryRemoveHeat(vent.getSELF_VENT_RATE());
+				vent.setSelfHeatVented(selfVent);
+				totalSelfVent += selfVent;
+				
 			}
 			
-			currentOutputHeat = hullHeatVented + componentHeatVented;	
+			currentOutputHeat = totalSelfVent + totalCompHeatVented;	
 		}
 	}
 	

@@ -7,6 +7,9 @@ public class HeatVent extends HeatManagementComponent {
 	private final int HULL_VENT_RATE;
 	private final int SELF_VENT_RATE;
 	
+	private int componentHeatVented = 0;
+	private int hullHeatDrawn = 0;
+	private int selfHeatVented = 0;
 	
 	public HeatVent(int posX, int posY, 
 			int heatCapacity, 
@@ -41,6 +44,30 @@ public class HeatVent extends HeatManagementComponent {
 
 	public int getSELF_VENT_RATE() {
 		return SELF_VENT_RATE;
+	}
+	
+	public int getComponentHeatVented() {
+		return componentHeatVented;
+	}
+
+	public int getHullHeatDrawn() {
+		return hullHeatDrawn;
+	}
+
+	public int getSelfHeatVented() {
+		return selfHeatVented;
+	}
+
+	public void setComponentHeatVented(int heat) {
+		this.componentHeatVented = heat;
+	}
+	
+	public void setHullHeatDrawn(int heat) {
+		this.hullHeatDrawn = heat;
+	}
+	
+	public void setSelfHeatVented(int heat) {
+		this.selfHeatVented = heat;
 	}
 	
 }

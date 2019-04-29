@@ -29,6 +29,9 @@ public class FuelRod extends ReactorComponent {
 	private int remainingLifetime;
 	private int pulsesReceived = 0;
 	
+	private int euProduced = 0;
+	private int heatProduced = 0;
+	
 	public FuelRod(int posX, int posY, 
 			int lifeTime, ComponentSubType depletedType, 
 			int heatPerSecond, int heatBoostRate, int euPerSecond, int euBoostRate,
@@ -76,6 +79,10 @@ public class FuelRod extends ReactorComponent {
 		return DEPLETED_TYPE;
 	}
 	
+	public void resetNeutronPulses() {
+		pulsesReceived = 0;
+	}
+	
 	public void addNeutronPulse(int pulses) {
 		pulsesReceived += pulses;
 	}
@@ -84,15 +91,27 @@ public class FuelRod extends ReactorComponent {
 		return NEUTRON_PULSES_EMITTED;
 	}
 	
+	public int getEUProduced() {
+		return euProduced;
+	}
+	
+	public int getHeatProduced() {
+		return heatProduced;
+	}
+	
 	public int getHeatPerSecond(int hullHeat, int hullHeatMax) {
 		final double heatBoost = ((HEAT_BOOST_RATE - 1.0D) / Math.pow(hullHeatMax, 2.0D)) * Math.pow(hullHeat, 2.0D) + 1.0D;
 		final int heat = (int) Math.round((heatBoost * (HEAT_PER_SECOND + (pulsesReceived * HEAT_PER_PULSE))));
+		
+		heatProduced = heat;
 		return heat;
 	}
 	
 	public int getElectricityPerSecond(int hullHeat, int hullHeatMax) {
 		final double heatBoost = ((EU_BOOST_RATE - 1.0D) / Math.pow(hullHeatMax, 2.0D)) * Math.pow(hullHeat, 2.0D) + 1.0D;		
 		final int eu = (int) Math.round(heatBoost * (EU_PER_SECOND + (pulsesReceived * EU_PER_PULSE)));
+		
+		euProduced = eu / 20 * 10;
 		return eu;
 	}
 	

@@ -48,7 +48,8 @@ public class ComponentFactory {
 		// Neutron Reflector
 		T1NeutronReflector(ComponentType.NeutronReflector, "T1NeutronReflector"),
 		// Coolant Cell
-		CoolantCell10k(ComponentType.CoolantCell, "CoolantCell10k");
+		CoolantCell10k(ComponentType.CoolantCell, "CoolantCell10k"),
+		HeliumCoolantCell360k(ComponentType.CoolantCell, "HeliumCoolantCell360k");
 		
 		private final ComponentType type;
 		private final String stringName;
@@ -115,7 +116,10 @@ public class ComponentFactory {
 		componentData.put(ComponentSubType.T1NeutronReflector, t1NeutronReflector);
 		// Coolant Cells
 		final Integer[] coolantCell10k = {10000};
+		final Integer[] heliumCoolantCell360k = {360000};
 		componentData.put(ComponentSubType.CoolantCell10k, coolantCell10k);
+		componentData.put(ComponentSubType.HeliumCoolantCell360k, heliumCoolantCell360k);
+		
 	}
 	
 	public ReactorComponent generateComponent(ComponentSubType type, int posX, int posY) {
@@ -182,6 +186,7 @@ public class ComponentFactory {
 			break;
 		
 		case CoolantCell10k:
+		case HeliumCoolantCell360k:
 			rc = new CoolantCell(posX, posY, data);
 			break;
 		}
