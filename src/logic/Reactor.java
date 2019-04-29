@@ -2,7 +2,6 @@ package logic;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 import component_blueprints.CoolantCell;
@@ -23,6 +22,7 @@ public class Reactor implements Runnable{
 	private final ComponentFactory componentFactory = new ComponentFactory();
 	
 	private static final int EXPLOSION_THRESHOLD = 10000;
+	private static final int EU_MULTIPLIER = 10; // GTNH 10x EU boost
 		
 	private boolean isActive = false;
 	private boolean isEUMode = true;
@@ -51,7 +51,7 @@ public class Reactor implements Runnable{
 			tick();
 			delta = delta - System.currentTimeMillis();
 			try {
-				Thread.sleep(1000 - delta);
+				Thread.sleep(100 - delta);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -237,7 +237,7 @@ public class Reactor implements Runnable{
 			}			
 		// 2)
 			for(FuelRod rod : fuelRods.getAll()) {
-				currentOutputEU += rod.getElectricityPerSecond(hullHeat, EXPLOSION_THRESHOLD);
+				currentOutputEU += rod.getElectricityPerSecond(hullHeat, EXPLOSION_THRESHOLD) / 20 * EU_MULTIPLIER;
 				
 				int heat = rod.getHeatPerSecond(hullHeat, EXPLOSION_THRESHOLD);
 				int neighbourCount = 0;
@@ -319,8 +319,8 @@ public class Reactor implements Runnable{
 				// TODO: Doesn't quite behave the same as the above procedure, I think
 				// - see above procedure
 				final int summedHeat = hullHeat + heatExch.getHeat();
-				int reactorHeatFraction = hullHeat / summedHeat;
-				int exchangerHeatFraction = heatExch.getHeat() / summedHeat;
+				int reactorHeatFraction = (summedHeat == 0) ? 0 : (hullHeat / summedHeat);
+				int exchangerHeatFraction = (summedHeat == 0) ? 0 : (heatExch.getHeat() / summedHeat);
 				reactorHeatFraction = reactorHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
 				exchangerHeatFraction = exchangerHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
 				// - move heat
