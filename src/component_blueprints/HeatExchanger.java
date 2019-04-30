@@ -5,12 +5,12 @@ import java.util.Map.Entry;
 
 public class HeatExchanger extends HeatManagementComponent {
 	
-	private final int COMPONENT_EXCHANGE_RATE;
-	private final int HULL_EXCHANGE_RATE;
+	private final double COMPONENT_EXCHANGE_RATE;
+	private final double HULL_EXCHANGE_RATE;
 		
 	public HeatExchanger(int posX, int posY, 
-			int heatCapacity, 
-			int componentExchangeRate, int hullExchangeRate) {
+			double heatCapacity, 
+			double componentExchangeRate, double hullExchangeRate) {
 		
 		super(ComponentType.HeatExchanger, posX, posY, heatCapacity);
 		
@@ -19,7 +19,7 @@ public class HeatExchanger extends HeatManagementComponent {
 	}
 	
 	public HeatExchanger(int posX, int posY, 
-			Integer[] data) {
+			Double[] data) {
 		
 		super(ComponentType.HeatExchanger, posX, posY, data[0]);
 		
@@ -27,11 +27,11 @@ public class HeatExchanger extends HeatManagementComponent {
 		this.HULL_EXCHANGE_RATE = data[2];
 	}
 	
-	public int getCOMPONENT_EXCHANGE_RATEe() {
+	public double getCOMPONENT_EXCHANGE_RATEe() {
 		return COMPONENT_EXCHANGE_RATE;
 	}
 	
-	public int getHULL_EXCHANGE_RATE() {
+	public double getHULL_EXCHANGE_RATE() {
 		return HULL_EXCHANGE_RATE;
 	}
 	

@@ -17,7 +17,8 @@ public abstract class ReactorComponent {
 		NeutronReflector,
 		CoolantCell,
 		HeatExchanger,
-		HeatVent
+		HeatVent,
+		EmergencyFoam
 	}
 	
 	private final ComponentType type;

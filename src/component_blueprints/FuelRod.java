@@ -13,29 +13,29 @@ import logic.ComponentFactory.ComponentSubType;
  */
 public class FuelRod extends ReactorComponent {
 	
-	private static final int HEAT_PER_PULSE = 4;
-	private static final int EU_PER_PULSE = 5;
+	private static final double HEAT_PER_PULSE = 4.0D;
+	private static final double EU_PER_PULSE = 5.0D * 10.0D;
 	
-	private final int LIFETIME;
+	private final double LIFETIME;
 	private final ComponentSubType DEPLETED_TYPE;
 	
-	private final int HEAT_PER_SECOND;
+	private final double HEAT_PER_SECOND;
 	private final double HEAT_BOOST_RATE;
-	private final int EU_PER_SECOND;
+	private final double EU_PER_SECOND;
 	private final double EU_BOOST_RATE;
 	
-	private final int NEUTRON_PULSES_EMITTED;
+	private final double NEUTRON_PULSES_EMITTED;
 	
-	private int remainingLifetime;
-	private int pulsesReceived = 0;
+	private double remainingLifetime;
+	private double pulsesReceived = 0;
 	
-	private int euProduced = 0;
-	private int heatProduced = 0;
+	private double euProduced = 0;
+	private double heatProduced = 0;
 	
 	public FuelRod(int posX, int posY, 
-			int lifeTime, ComponentSubType depletedType, 
-			int heatPerSecond, int heatBoostRate, int euPerSecond, int euBoostRate,
-			int neutronPulsesEmitted) {
+			double lifeTime, ComponentSubType depletedType, 
+			double heatPerSecond, double heatBoostRate, double euPerSecond, double euBoostRate,
+			double neutronPulsesEmitted) {
 		
 		super(ComponentType.FuelRod, posX, posY);
 		
@@ -52,7 +52,7 @@ public class FuelRod extends ReactorComponent {
 	
 	public FuelRod(int posX, int posY, 
 			ComponentSubType depletedType, 
-			Integer[] data) {
+			Double[] data) {
 		
 		super(ComponentType.FuelRod, posX, posY);
 		
@@ -67,11 +67,11 @@ public class FuelRod extends ReactorComponent {
 		remainingLifetime = LIFETIME;
 	}
 	
-	public int getLIFETIME() {
+	public double getLIFETIME() {
 		return LIFETIME;
 	}
 	
-	public int getRemainingLifetime() {
+	public double getRemainingLifetime() {
 		return remainingLifetime;
 	}
 	
@@ -83,35 +83,35 @@ public class FuelRod extends ReactorComponent {
 		pulsesReceived = 0;
 	}
 	
-	public void addNeutronPulse(int pulses) {
+	public void addNeutronPulse(double pulses) {
 		pulsesReceived += pulses;
 	}
 	
-	public int getNEUTRON_PULSES_EMITTED() {
+	public double getNEUTRON_PULSES_EMITTED() {
 		return NEUTRON_PULSES_EMITTED;
 	}
 	
-	public int getEUProduced() {
+	public double getEUProduced() {
 		return euProduced;
 	}
 	
-	public int getHeatProduced() {
+	public double getHeatProduced() {
 		return heatProduced;
 	}
 	
-	public int getHeatPerSecond(int hullHeat, int hullHeatMax) {
+	public double getHeatPerSecond(double hullHeat, double hullHeatMax) {
 		final double heatBoost = ((HEAT_BOOST_RATE - 1.0D) / Math.pow(hullHeatMax, 2.0D)) * Math.pow(hullHeat, 2.0D) + 1.0D;
-		final int heat = (int) Math.round((heatBoost * (HEAT_PER_SECOND + (pulsesReceived * HEAT_PER_PULSE))));
+		final double heat = heatBoost * (HEAT_PER_SECOND + (NEUTRON_PULSES_EMITTED * pulsesReceived * HEAT_PER_PULSE)); // NEUTRON_PULSES_EMITTED = amount of rods. using it like that.
 		
 		heatProduced = heat;
 		return heat;
 	}
 	
-	public int getElectricityPerSecond(int hullHeat, int hullHeatMax) {
+	public double getElectricityPerSecond(double hullHeat, double hullHeatMax) {
 		final double heatBoost = ((EU_BOOST_RATE - 1.0D) / Math.pow(hullHeatMax, 2.0D)) * Math.pow(hullHeat, 2.0D) + 1.0D;		
-		final int eu = (int) Math.round(heatBoost * (EU_PER_SECOND + (pulsesReceived * EU_PER_PULSE)));
+		final double eu = heatBoost * (EU_PER_SECOND + (NEUTRON_PULSES_EMITTED * pulsesReceived * EU_PER_PULSE));
 		
-		euProduced = eu / 20 * 10;
+		euProduced = eu / 20.0D * 10.0D;
 		return eu;
 	}
 	
@@ -121,4 +121,5 @@ public class FuelRod extends ReactorComponent {
 			super.setDestroyed();
 		}
 	}
+	
 }

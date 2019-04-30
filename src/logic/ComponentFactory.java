@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import component_blueprints.CoolantCell;
 import component_blueprints.DepletedFuelRod;
+import component_blueprints.EmergencyFoam;
 import component_blueprints.FuelRod;
 import component_blueprints.HeatExchanger;
 import component_blueprints.HeatVent;
@@ -49,7 +50,10 @@ public class ComponentFactory {
 		T1NeutronReflector(ComponentType.NeutronReflector, "T1NeutronReflector"),
 		// Coolant Cell
 		CoolantCell10k(ComponentType.CoolantCell, "CoolantCell10k"),
-		HeliumCoolantCell360k(ComponentType.CoolantCell, "HeliumCoolantCell360k");
+		HeliumCoolantCell360k(ComponentType.CoolantCell, "HeliumCoolantCell360k"),
+		// Emergency Foam
+		Foam85(ComponentType.EmergencyFoam, "Foam85"),
+		Foam50(ComponentType.EmergencyFoam, "Foam50");
 		
 		private final ComponentType type;
 		private final String stringName;
@@ -68,40 +72,40 @@ public class ComponentFactory {
 		}
 	}
 	
-	private static HashMap<ComponentSubType, Integer[]> componentData = new HashMap<>();
+	private static HashMap<ComponentSubType, Double[]> componentData = new HashMap<>();
 	static {
 		// Specific Item to Type mapping
 		//typeMapping.put(key, value)
 		// Heat Vents
-		final Integer[] t1HeatVent = 			{1000, 0, 0, 6};
-		final Integer[] t2HeatVent = 			{1000, 0, 0, 12};
-		final Integer[] componentHeatVent = 	{1000, 12, 0, 0};
-		final Integer[] reactorHeatVent = 		{1000, 0, 5, 5};
-		final Integer[] overclockedHeatVent = 	{1000, 0, 36, 20};
+		final Double[] t1HeatVent = 			{1000d, 0d, 0d, 6d};
+		final Double[] t2HeatVent = 			{1000d, 0d, 0d, 12d};
+		final Double[] componentHeatVent = 	{1000d, 12d, 0d, 0d};
+		final Double[] reactorHeatVent = 		{1000d, 0d, 5d, 5d};
+		final Double[] overclockedHeatVent = 	{1000d, 0d, 36d, 20d};
 		componentData.put(ComponentSubType.T1HeatVent, t1HeatVent);
 		componentData.put(ComponentSubType.T2HeatVent, t2HeatVent);
 		componentData.put(ComponentSubType.ComponentHeatVent, componentHeatVent);
 		componentData.put(ComponentSubType.ReactorHeatVent, reactorHeatVent);
 		componentData.put(ComponentSubType.OverclockedHeatVent, overclockedHeatVent);
 		// Heat Exchangers
-		final Integer[] t1HeatExchanger = 			{2500, 12, 4};
-		final Integer[] t2HeatExchanger = 			{10000, 24, 8};
-		final Integer[] componentHeatExchanger = 	{5000, 36, 0};
-		final Integer[] reactorHeatExchanger = 		{5000, 0, 72};
+		final Double[] t1HeatExchanger = 			{2500d, 12d, 4d};
+		final Double[] t2HeatExchanger = 			{10000d, 24d, 8d};
+		final Double[] componentHeatExchanger = 	{5000d, 36d, 0d};
+		final Double[] reactorHeatExchanger = 		{5000d, 0d, 72d};
 		componentData.put(ComponentSubType.T1HeatExchanger, t1HeatExchanger);
 		componentData.put(ComponentSubType.T2HeatExchanger, t2HeatExchanger);
 		componentData.put(ComponentSubType.ComponentHeatExchanger, componentHeatExchanger);
 		componentData.put(ComponentSubType.ReactorHeatExchanger, reactorHeatExchanger);
 		// Fuel Rods
-		final Integer[] uraniumFuelRod = 		{20000, 4, 1, 100, 1, 1};
-		final Integer[] uraniumDualFuelRod = 	{20000, 24, 1, 400, 1, 2};
-		final Integer[] uraniumQuadFuelRod = 	{20000, 96, 1, 1200, 1, 4};
-		final Integer[] thoriumFuelRod = 		{100000, 1, 1, 20, 1, 1};
-		final Integer[] thoriumDualFuelRod = 	{100000, 6, 1, 80, 1, 2};
-		final Integer[] thoriumQuadFuelRod = 	{100000, 24, 1, 240, 1, 4};
-		final Integer[] moxUraniumFuelRod = 	{10000, 4, 10, 100, 10, 1};
-		final Integer[] moxUraniumDualFuelRod = {10000, 24, 10, 400, 10, 2};
-		final Integer[] moxUraniumQuadFuelRod = {10000, 96, 10, 1200, 10, 4};
+		final Double[] uraniumFuelRod = 		{20000d, 4d, 1d, 100d, 1d, 1d};
+		final Double[] uraniumDualFuelRod = 	{20000d, 24d, 1d, 400d, 1d, 2d};
+		final Double[] uraniumQuadFuelRod = 	{20000d, 96d, 1d, 1200d, 1d, 4d};
+		final Double[] thoriumFuelRod = 		{100000d, 1d, 1d, 20d, 1d, 1d};
+		final Double[] thoriumDualFuelRod = 	{100000d, 6d, 1d, 80d, 1d, 2d};
+		final Double[] thoriumQuadFuelRod = 	{100000d, 24d, 1d, 240d, 1d, 4d};
+		final Double[] moxUraniumFuelRod = 	{10000d, 4d, 5d, 100d, 5d, 1d};
+		final Double[] moxUraniumDualFuelRod = {10000d, 24d, 5d, 400d, 5d, 2d};
+		final Double[] moxUraniumQuadFuelRod = {10000d, 96d, 5d, 1200d, 5d, 4d};
 		componentData.put(ComponentSubType.UraniumFuelRod, uraniumFuelRod);
 		componentData.put(ComponentSubType.UraniumDualFuelRod, uraniumDualFuelRod);
 		componentData.put(ComponentSubType.UraniumQuadFuelRod, uraniumQuadFuelRod);
@@ -112,19 +116,24 @@ public class ComponentFactory {
 		componentData.put(ComponentSubType.MOXUraniumDualFuelRod, moxUraniumDualFuelRod);
 		componentData.put(ComponentSubType.MOXUraniumQuadFuelRod, moxUraniumQuadFuelRod);
 		// Neutron Reflectors
-		final Integer[] t1NeutronReflector = {30000};
+		final Double[] t1NeutronReflector = {30000d};
 		componentData.put(ComponentSubType.T1NeutronReflector, t1NeutronReflector);
 		// Coolant Cells
-		final Integer[] coolantCell10k = {10000};
-		final Integer[] heliumCoolantCell360k = {360000};
+		final Double[] coolantCell10k = {10000d};
+		final Double[] heliumCoolantCell360k = {360000d};
 		componentData.put(ComponentSubType.CoolantCell10k, coolantCell10k);
 		componentData.put(ComponentSubType.HeliumCoolantCell360k, heliumCoolantCell360k);
+		// Emergency Foam
+		final Double[] foam85 = {0.85d};
+		final Double[] foam50 = {0.50d};
+		componentData.put(ComponentSubType.Foam85, foam85);
+		componentData.put(ComponentSubType.Foam50, foam50);
 		
 	}
 	
 	public ReactorComponent generateComponent(ComponentSubType type, int posX, int posY) {
 		ReactorComponent rc = null;
-		final Integer[] data = componentData.get(type);
+		final Double[] data = componentData.get(type);
 		switch(type) {
 		case T1HeatVent:
 		case T2HeatVent:
@@ -188,6 +197,10 @@ public class ComponentFactory {
 		case CoolantCell10k:
 		case HeliumCoolantCell360k:
 			rc = new CoolantCell(posX, posY, data);
+			break;
+		case Foam50:
+		case Foam85:
+			rc = new EmergencyFoam(posX, posY, data);
 			break;
 		}
 		return rc;

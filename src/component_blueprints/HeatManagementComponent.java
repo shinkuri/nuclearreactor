@@ -2,22 +2,22 @@ package component_blueprints;
 
 public class HeatManagementComponent extends ReactorComponent {
 
-	private final int HEAT_CAPACITY;
+	private final double HEAT_CAPACITY;
 	
-	private int heat = 0;
+	private double heat = 0;
 	
-	protected HeatManagementComponent(ComponentType type, int posX, int posY, int heatCapacity) {
+	protected HeatManagementComponent(ComponentType type, int posX, int posY, double heatCapacity) {
 		
 		super(type, posX, posY);
 		
 		this.HEAT_CAPACITY = heatCapacity;
 	}
 	
-	public int getHEAT_CAPACITY() {
+	public double getHEAT_CAPACITY() {
 		return HEAT_CAPACITY;
 	}
 	
-	public int getHeat() {
+	public double getHeat() {
 		return heat;
 	}
 	
@@ -27,11 +27,11 @@ public class HeatManagementComponent extends ReactorComponent {
 	 * @param delta : Positive change in heat (delta = natural number).
 	 * @return Amount of heat added
 	 */
-	public int tryAddHeat(int delta) {
+	public double tryAddHeat(double delta) {
 		if(delta <= 0) {
 			return 0;
 		}
-		final int heatChange = Math.min((HEAT_CAPACITY - heat), delta);
+		final double heatChange = Math.min((HEAT_CAPACITY - heat), delta);
 		if(delta > heatChange) {
 			super.setDestroyed();
 		}
@@ -44,11 +44,11 @@ public class HeatManagementComponent extends ReactorComponent {
 	 * @param delta : Negative change in heat (delta = natural number).
 	 * @return Amount of heat removed.
 	 */
-	public int tryRemoveHeat(int delta) {
+	public double tryRemoveHeat(double delta) {
 		if(delta <= 0) {
 			return 0;
 		}
-		final int heatChange = Math.min(heat, delta);
+		final double heatChange = Math.min(heat, delta);
 		heat -= heatChange;
 		return heatChange;
 	}

@@ -3,17 +3,17 @@ package component_blueprints;
 
 public class HeatVent extends HeatManagementComponent {
 	
-	private final int COMPONENT_VENT_RATE;
-	private final int HULL_VENT_RATE;
-	private final int SELF_VENT_RATE;
+	private final double COMPONENT_VENT_RATE;
+	private final double HULL_VENT_RATE;
+	private final double SELF_VENT_RATE;
 	
-	private int componentHeatVented = 0;
-	private int hullHeatDrawn = 0;
-	private int selfHeatVented = 0;
+	private double componentHeatVented = 0;
+	private double hullHeatDrawn = 0;
+	private double selfHeatVented = 0;
 	
 	public HeatVent(int posX, int posY, 
-			int heatCapacity, 
-			int componentVentRate, int hullVentRate, int selfVentRate) {
+			double heatCapacity, 
+			double componentVentRate, double hullVentRate, double selfVentRate) {
 		
 		super(ComponentType.HeatVent, posX, posY, heatCapacity);
 		
@@ -24,7 +24,7 @@ public class HeatVent extends HeatManagementComponent {
 	}
 	
 	public HeatVent(int posX, int posY, 
-			Integer[] data) {
+			Double[] data) {
 		
 		super(ComponentType.HeatVent, posX, posY, data[0]);
 		
@@ -34,39 +34,43 @@ public class HeatVent extends HeatManagementComponent {
 
 	}
 	
-	public int getCOMPONENT_VENT_RATE() {
+	public double getCOMPONENT_VENT_RATE() {
 		return COMPONENT_VENT_RATE;
 	}
 
-	public int getHULL_VENT_RATE() {
+	public double getHULL_VENT_RATE() {
+		return HULL_VENT_RATE;
+	}
+	
+	public double getHULL_VENT_RATE_D() {
 		return HULL_VENT_RATE;
 	}
 
-	public int getSELF_VENT_RATE() {
+	public double getSELF_VENT_RATE() {
 		return SELF_VENT_RATE;
 	}
 	
-	public int getComponentHeatVented() {
+	public double getComponentHeatVented() {
 		return componentHeatVented;
 	}
 
-	public int getHullHeatDrawn() {
+	public double getHullHeatDrawn() {
 		return hullHeatDrawn;
 	}
 
-	public int getSelfHeatVented() {
+	public double getSelfHeatVented() {
 		return selfHeatVented;
 	}
 
-	public void setComponentHeatVented(int heat) {
+	public void setComponentHeatVented(double heat) {
 		this.componentHeatVented = heat;
 	}
 	
-	public void setHullHeatDrawn(int heat) {
+	public void setHullHeatDrawn(double heat) {
 		this.hullHeatDrawn = heat;
 	}
 	
-	public void setSelfHeatVented(int heat) {
+	public void setSelfHeatVented(double heat) {
 		this.selfHeatVented = heat;
 	}
 	

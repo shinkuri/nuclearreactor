@@ -3,14 +3,14 @@ package component_blueprints;
 public class CoolantCell extends HeatManagementComponent {
 	
 	public CoolantCell(int posX, int posY,
-			int heatCapacity) {
+			double heatCapacity) {
 		
 		super(ComponentType.CoolantCell, posX, posY, heatCapacity);
 		
 	}
 	
 	public CoolantCell(int posX, int posY, 
-			Integer[] data) {
+			Double[] data) {
 		
 		super(ComponentType.CoolantCell, posX, posY, data[0]);
 		

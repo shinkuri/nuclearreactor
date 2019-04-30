@@ -2,12 +2,12 @@ package component_blueprints;
 
 public class NeutronReflector extends ReactorComponent {
 
-	private final int DURABILITY;	
+	private final double DURABILITY;	
 	
-	private int durability;
+	private double durability;
 	
 	public NeutronReflector(int posX, int posY,
-			int durability) {
+			double durability) {
 		
 		super(ComponentType.NeutronReflector, posX, posY);
 		
@@ -17,7 +17,7 @@ public class NeutronReflector extends ReactorComponent {
 	}
 	
 	public NeutronReflector(int posX, int posY, 
-			Integer[] data) {
+			Double[] data) {
 		
 		super(ComponentType.NeutronReflector, posX, posY);
 		
@@ -26,11 +26,11 @@ public class NeutronReflector extends ReactorComponent {
 		durability = DURABILITY;
 	}
 	
-	public int getDURABILITY() {
+	public double getDURABILITY() {
 		return DURABILITY;
 	}
 	
-	public int getDurability() {
+	public double getDurability() {
 		return durability;
 	}
 	

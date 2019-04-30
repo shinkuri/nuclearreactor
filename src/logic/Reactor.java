@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import component_blueprints.CoolantCell;
 import component_blueprints.DepletedFuelRod;
+import component_blueprints.EmergencyFoam;
 import component_blueprints.FuelRod;
 import component_blueprints.HeatExchanger;
 import component_blueprints.HeatManagementComponent;
@@ -21,18 +22,18 @@ public class Reactor implements Runnable{
 	
 	private final ComponentFactory componentFactory = new ComponentFactory();
 	
-	private static final int EXPLOSION_THRESHOLD = 10000;
-	private static final int EU_MULTIPLIER = 10; // GTNH 10x EU boost
+	private static final double EXPLOSION_THRESHOLD = 10000d;
+	private static final double EU_MULTIPLIER = 10d; // GTNH 10x EU boost
 		
 	private boolean isActive = false;
 	private boolean isEUMode = true;
-	private int hullHeat = 0;
+	private double hullHeat = 0d;
 	
-	private int hullVentingCapacity = 0;
-	private int componentVentingCapacity = 0;
+	private double hullVentingCapacity = 0d;
+	private double componentVentingCapacity = 0d;
 	
-	private int currentOutputEU = 0;
-	private int currentOutputHeat = 0;
+	private double currentOutputEU = 0d;
+	private double currentOutputHeat = 0d;
 	
 	private static final int SIZE_X = 9;
 	private static final int SIZE_Y = 6;
@@ -42,6 +43,7 @@ public class Reactor implements Runnable{
 	private final Grid<DepletedFuelRod> depletedRods = new Grid<>(DepletedFuelRod.class, SIZE_X, SIZE_Y);
 	private final Grid<NeutronReflector> neutronReflectors = new Grid<>(NeutronReflector.class, SIZE_X, SIZE_Y);
 	private final Grid<CoolantCell> coolantCells = new Grid<>(CoolantCell.class, SIZE_X, SIZE_Y);
+	private final Grid<EmergencyFoam> emergencyFoams = new Grid<>(EmergencyFoam.class, SIZE_X, SIZE_Y);
 	private final Object componentLock = new Object();
 	
 	@Override
@@ -84,6 +86,7 @@ public class Reactor implements Runnable{
 			case DepletedFuelRod: depletedRods.put(rc); break;
 			case NeutronReflector: neutronReflectors.put(rc); break;
 			case CoolantCell: coolantCells.put(rc); break;
+			case EmergencyFoam: emergencyFoams.put(rc); break;
 			}
 			
 			// Update cache
@@ -96,16 +99,16 @@ public class Reactor implements Runnable{
 		return isActive;
 	}
 	
-	public int getHullHeat() {
-		return hullHeat;
+	public long getHullHeat() {
+		return Math.round(hullHeat);
 	}
 	
-	public int getEUOutput() {
-		return currentOutputEU;
+	public long getEUOutput() {
+		return Math.round(currentOutputEU);
 	}
 	
-	public int getHUOutput() {
-		return currentOutputHeat;
+	public long getHUOutput() {
+		return Math.round(currentOutputHeat);
 	}
 	
 	public ReactorComponent getComponent(int posX, int posY) {
@@ -128,6 +131,9 @@ public class Reactor implements Runnable{
 			else if(coolantCells.get(posX, posY) != null) {
 				return coolantCells.get(posX, posY);
 			}
+			else if(emergencyFoams.get(posX, posY) != null) {
+				return emergencyFoams.get(posX, posY);
+			}
 			return null;			
 		}
 	}
@@ -142,6 +148,7 @@ public class Reactor implements Runnable{
 			rcs.addAll(depletedRods.getAll());
 			rcs.addAll(neutronReflectors.getAll());
 			rcs.addAll(coolantCells.getAll());
+			rcs.addAll(emergencyFoams.getAll());
 			
 			return rcs;
 		}
@@ -157,6 +164,7 @@ public class Reactor implements Runnable{
 			depletedRods.clear();
 			neutronReflectors.clear();
 			coolantCells.clear();
+			emergencyFoams.clear();
 		}
 	}
 	
@@ -164,16 +172,19 @@ public class Reactor implements Runnable{
 	 * If a component with heat capacity is destroyed, all the heat it holds is released into the hull
 	 * @param rc : Component to be destroyed
 	 */
-	public void removeComponent(ReactorComponent rc) {
+	public void removeComponent(ReactorComponent rc, boolean foamed) {
 		synchronized(componentLock) {
-			System.out.println("Removed " +rc.getType() +"@" +rc.getX() +"/" +rc.getY());
+			System.out.println(
+					((foamed) ? "Foamed :" : "Removed ") +rc.getType() +"@" +rc.getX() +"/" +rc.getY());
 			
-			if(rc instanceof HeatManagementComponent) {
-				HeatManagementComponent hmc = (HeatManagementComponent) rc;
-				hullHeat += hmc.getHeat();
-			} else if (rc instanceof FuelRod) {
-				FuelRod fr = (FuelRod) rc;
-				depletedRods.put(componentFactory.generateComponent(fr.getDepletedRod(), fr.getX(), fr.getY()));
+			if(!foamed) {
+				if(rc instanceof HeatManagementComponent) {
+					HeatManagementComponent hmc = (HeatManagementComponent) rc;
+					hullHeat += hmc.getHeat();
+				} else if (rc instanceof FuelRod) {
+					FuelRod fr = (FuelRod) rc;
+					depletedRods.put(componentFactory.generateComponent(fr.getDepletedRod(), fr.getX(), fr.getY()));
+				}	
 			}
 			
 			switch(rc.getType()) {
@@ -183,6 +194,7 @@ public class Reactor implements Runnable{
 			case DepletedFuelRod: depletedRods.remove(rc); break;
 			case NeutronReflector: neutronReflectors.remove(rc); break;
 			case CoolantCell: coolantCells.remove(rc); break; 
+			case EmergencyFoam: emergencyFoams.remove(rc); break;
 			}
 			
 			// Update cache
@@ -204,12 +216,12 @@ public class Reactor implements Runnable{
 	
 	/**
 	 * Process reactor components in this order: <br>
-	 * 1) Calculate all neutron pulses <br>
-	 * 2) Fuel Rods <br> 
-	 * 3) Heat Exchanger <br>
-	 * 4) Heat Vents <br>
-	 * 5) Update output values <br>
-	 * 		3 & 4 are heat management components <br>
+	 * 1) Emergency foam
+	 * 2) Calculate all neutron pulses <br>
+	 * 3) Fuel Rods <br> 
+	 * 4) Heat Exchanger <br>
+	 * 5) Heat Vents <br>
+	 * 		4 & 5 are heat management components <br>
 	 */
 	private void simulate() {
 		currentOutputEU = 0;
@@ -217,6 +229,24 @@ public class Reactor implements Runnable{
 		
 		synchronized(componentLock) {
 		// 1)
+			for(EmergencyFoam foam : emergencyFoams.getAll()) {
+				final double hullHeatPercentage = hullHeat / EXPLOSION_THRESHOLD;
+				if(hullHeatPercentage >= foam.getHULL_HEAT_THRESHOLD()) {
+					final HashSet<ReactorComponent> set = new HashSet<>();
+					set.addAll(heatVents.getNeighbours(foam));
+					set.addAll(heatExchangers.getNeighbours(foam));
+					set.addAll(coolantCells.getNeighbours(foam));
+					set.addAll(fuelRods.getNeighbours(foam));
+					set.addAll(depletedRods.getNeighbours(foam));
+					set.addAll(neutronReflectors.getNeighbours(foam));
+					for(ReactorComponent rc : set) {
+						removeComponent(rc, true);
+					}
+					removeComponent(foam, true);
+				}
+			}
+			
+		// 2)
 			for(FuelRod rod : fuelRods.getAll()) {
 				rod.resetNeutronPulses();
 			}
@@ -225,7 +255,7 @@ public class Reactor implements Runnable{
 					if(c != null) {
 						refl.applyReflectedPulses(c);
 						if(!refl.isAlive()) {
-							removeComponent(refl);
+							removeComponent(refl, false);
 							break;
 						}
 					}
@@ -238,16 +268,16 @@ public class Reactor implements Runnable{
 					}
 				}
 			}			
-		// 2)
+		// 3)
 			for(FuelRod rod : fuelRods.getAll()) {
 				currentOutputEU += rod.getElectricityPerSecond(hullHeat, EXPLOSION_THRESHOLD) / 20 * EU_MULTIPLIER;
 				
-				int heat = rod.getHeatPerSecond(hullHeat, EXPLOSION_THRESHOLD);
+				double heat = rod.getHeatPerSecond(hullHeat, EXPLOSION_THRESHOLD);
 				int neighbourCount = 0;
 				neighbourCount += heatVents.getNeighbours(rod).size();
 				neighbourCount += heatExchangers.getNeighbours(rod).size();
 				neighbourCount += coolantCells.getNeighbours(rod).size();
-				final int heatPerSide = (neighbourCount > 0) ? (heat / neighbourCount) : heat;
+				final double heatPerSide = (neighbourCount > 0) ? (heat / neighbourCount) : heat;
 				
 				final HashSet<HeatManagementComponent> heatComponents = new HashSet<>();
 				heatComponents.addAll(heatVents.getNeighbours(rod));
@@ -257,7 +287,7 @@ public class Reactor implements Runnable{
 					if(c != null) {
 						heat -= c.tryAddHeat(heatPerSide);
 						if(!c.isAlive()) {
-							removeComponent(c);
+							removeComponent(c, false);
 						}
 					}
 				}
@@ -265,10 +295,10 @@ public class Reactor implements Runnable{
 				hullHeat += heat;
 				rod.use();
 				if(!rod.isAlive()) {
-					removeComponent(rod);
+					removeComponent(rod, false);
 				}
 			}			
-		// 3)
+		// 4)
 			for(HeatExchanger heatExch : heatExchangers.getAll()) {
 				// Component exchange rate
 				// - get heat of all adjacent components
@@ -294,7 +324,7 @@ public class Reactor implements Runnable{
 				// - take calculated fraction of heat from each component and distribute it to the others
 				for(Entry<HeatManagementComponent, Double> cTake : targets.entrySet()) {
 					// Take heat from the currently processed component
-					int removedHeat = 0;
+					double removedHeat = 0;
 					removedHeat = cTake.getKey().tryRemoveHeat(cTake.getValue().intValue());
 					
 					// Try to distribute all the heat that was taken
@@ -304,7 +334,7 @@ public class Reactor implements Runnable{
 							removedHeat -= cDist.getKey().tryAddHeat(removedHeat / (targets.size() - 1));
 						
 							if(!cDist.getKey().isAlive()) {
-								removeComponent(cDist.getKey());
+								removeComponent(cDist.getKey(), false);
 							}
 						}
 					}
@@ -314,16 +344,16 @@ public class Reactor implements Runnable{
 						cTake.getKey().tryAddHeat(removedHeat);
 						
 						if(!cTake.getKey().isAlive()) {
-							removeComponent(cTake.getKey());
+							removeComponent(cTake.getKey(), false);
 						}
 					}
 				}
 				// Hull exchange rate
 				// TODO: Doesn't quite behave the same as the above procedure, I think
 				// - see above procedure
-				final int summedHeat = hullHeat + heatExch.getHeat();
-				int reactorHeatFraction = (summedHeat == 0) ? 0 : (hullHeat / summedHeat);
-				int exchangerHeatFraction = (summedHeat == 0) ? 0 : (heatExch.getHeat() / summedHeat);
+				final double summedHeat = hullHeat + heatExch.getHeat();
+				double reactorHeatFraction = (summedHeat == 0) ? 0 : (hullHeat / summedHeat);
+				double exchangerHeatFraction = (summedHeat == 0) ? 0 : (heatExch.getHeat() / summedHeat);
 				reactorHeatFraction = reactorHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
 				exchangerHeatFraction = exchangerHeatFraction * heatExch.getHULL_EXCHANGE_RATE();
 				// - move heat
@@ -332,32 +362,31 @@ public class Reactor implements Runnable{
 				heatExch.tryRemoveHeat(exchangerHeatFraction);
 				heatExch.tryAddHeat(reactorHeatFraction);
 				if(!heatExch.isAlive()) {
-					removeComponent(heatExch);
+					removeComponent(heatExch, false);
 				}
 			}
-		// 4)
-			int totalSelfVent = 0;
-			int totalCompHeatVented = 0;
+		// 5)
+			double totalSelfVent = 0;
+			double totalCompHeatVented = 0;
 			
-			final int hullHeatIntakeTotal = Math.min(hullVentingCapacity, hullHeat);
+			final double hullHeatIntakeTotal = Math.min(hullVentingCapacity, hullHeat);
 			for(HeatVent vent : heatVents.getAll()) {
 				// Hull vent rate
 				if(vent.getHULL_VENT_RATE() > 0) {
-					final int heatIntake = (vent.getHULL_VENT_RATE() / hullVentingCapacity) * hullHeatIntakeTotal;
-					System.out.println("heat intake: " +heatIntake);
-					final int hullHeatTaken = vent.tryAddHeat(heatIntake);
-					System.out.println("heat intaken: " +hullHeatTaken);
+					final double ventFraction = vent.getHULL_VENT_RATE_D() / hullVentingCapacity;
+					final double heatIntake = ventFraction * hullHeatIntakeTotal;
+					final double hullHeatTaken = vent.tryAddHeat((int) heatIntake);
 					hullHeat -= hullHeatTaken;
 					vent.setHullHeatDrawn(hullHeatTaken);
 					if(!vent.isAlive()) {
-						removeComponent(vent);
+						removeComponent(vent, false);
 						continue;
 					}				
 				}
 				// Component vent rate
-				int componentHeatVented = 0;
+				double componentHeatVented = 0;
 				if(vent.getCOMPONENT_VENT_RATE() > 0) {
-					final int ratePerSide = vent.getCOMPONENT_VENT_RATE() / heatVents.getMaxNeighbours(vent);
+					final double ratePerSide = vent.getCOMPONENT_VENT_RATE() / heatVents.getNeighbours(vent).size();
 					for(HeatExchanger c : heatExchangers.getNeighbours(vent)) {
 						if(c != null) {
 							componentHeatVented += c.tryRemoveHeat(ratePerSide);
@@ -376,7 +405,7 @@ public class Reactor implements Runnable{
 				vent.setComponentHeatVented(componentHeatVented);
 				totalCompHeatVented += componentHeatVented;
 				// Self vent rate
-				final int selfVent = vent.tryRemoveHeat(vent.getSELF_VENT_RATE());
+				final double selfVent = vent.tryRemoveHeat(vent.getSELF_VENT_RATE());
 				vent.setSelfHeatVented(selfVent);
 				totalSelfVent += selfVent;
 				
