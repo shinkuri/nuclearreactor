@@ -13,6 +13,7 @@ import logic.ComponentFactory.ComponentSubType;
  */
 public class FuelRod extends ReactorComponent {
 	
+	//TODO: Uranium and Thorium shouldn't use the same here
 	private static final double HEAT_PER_PULSE = 4.0D;
 	private static final double EU_PER_PULSE = 5.0D * 10.0D;
 	
@@ -101,7 +102,7 @@ public class FuelRod extends ReactorComponent {
 	
 	public double getHeatPerSecond(double hullHeat, double hullHeatMax) {
 		final double heatBoost = ((HEAT_BOOST_RATE - 1.0D) / Math.pow(hullHeatMax, 2.0D)) * Math.pow(hullHeat, 2.0D) + 1.0D;
-		final double heat = heatBoost * (HEAT_PER_SECOND + (NEUTRON_PULSES_EMITTED * pulsesReceived * HEAT_PER_PULSE)); // NEUTRON_PULSES_EMITTED = amount of rods. using it like that.
+		final double heat = heatBoost * (HEAT_PER_SECOND + (NEUTRON_PULSES_EMITTED * pulsesReceived * HEAT_PER_PULSE)); // NEUTRON_PULSES_EMITTED = Amount of rods. Using it like that.
 		
 		heatProduced = heat;
 		return heat;
@@ -116,9 +117,16 @@ public class FuelRod extends ReactorComponent {
 	}
 	
 	public void use() {
-		remainingLifetime -= 1;
-		if(remainingLifetime <= 0) {
-			super.setDestroyed();
+		remainingLifetime--;
+		if(remainingLifetime > 0) {
+			if(super.applyEjectionFunction((int) remainingLifetime) == true) {
+				super.setStatus(EJECTED);
+				return;
+			} else {
+				super.setStatus(WORKING);
+			}
+		} else {
+			super.setStatus(DESTROYED);
 		}
 	}
 	

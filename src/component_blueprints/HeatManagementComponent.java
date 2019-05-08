@@ -32,10 +32,16 @@ public class HeatManagementComponent extends ReactorComponent {
 			return 0;
 		}
 		final double heatChange = Math.min((HEAT_CAPACITY - heat), delta);
-		if(delta > heatChange) {
-			super.setDestroyed();
-		}
 		heat += heatChange;
+		if(heat < HEAT_CAPACITY) {
+			if(super.applyEjectionFunction((int) heat) == true) {
+				super.setStatus(EJECTED);
+			} else {
+				super.setStatus(WORKING);
+			}
+		} else {
+			super.setStatus(DESTROYED);
+		}
 		return heatChange;
 	}
 	
@@ -50,6 +56,11 @@ public class HeatManagementComponent extends ReactorComponent {
 		}
 		final double heatChange = Math.min(heat, delta);
 		heat -= heatChange;
+		if(super.applyEjectionFunction((int) heat) == true) {
+			super.setStatus(EJECTED);
+		} else {
+			super.setStatus(WORKING);
+		}
 		return heatChange;
 	}
 

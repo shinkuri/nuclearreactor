@@ -36,6 +36,9 @@ public class ComponentFactory {
 		MOXUraniumFuelRod(ComponentType.FuelRod, "MOXUraniumFuelRod"),
 		MOXUraniumDualFuelRod(ComponentType.FuelRod, "MOXUraniumDualFuelRod"),
 		MOXUraniumQuadFuelRod(ComponentType.FuelRod, "MOXUraniumQuadFuelRod"),
+		NaquadahFuelRod(ComponentType.FuelRod, "NaquadahFuelRod"),
+		NaquadahDualFuelRod(ComponentType.FuelRod, "NaquadahDualFuelRod"),
+		NaquadahQuadFuelRod(ComponentType.FuelRod, "NaquadahQuadFuelRod"),
 		// Depleted Fuel Rod
 		DepletedUraniumFuelRod(ComponentType.DepletedFuelRod, "DepletedUraniumFuelRod"),
 		DepletedUraniumDualFuelRod(ComponentType.DepletedFuelRod, "DepletedUraniumDualFuelRod"),
@@ -46,6 +49,9 @@ public class ComponentFactory {
 		DepletedMOXUraniumFuelRod(ComponentType.DepletedFuelRod, "DepletedMOXUraniumFuelRod"),
 		DepletedMOXUraniumDualFuelRod(ComponentType.DepletedFuelRod, "DepletedMOXUraniumDualFuelRod"),
 		DepletedMOXUraniumQuadFuelRod(ComponentType.DepletedFuelRod, "DepletedMOXUraniumQuadFuelRod"),
+		DepletedNaquadahFuelRod(ComponentType.FuelRod, "DepletedNaquadahFuelRod"),
+		DepletedNaquadahDualFuelRod(ComponentType.FuelRod, "DepletedNaquadahDualFuelRod"),
+		DepletedNaquadahQuadFuelRod(ComponentType.FuelRod, "DepletedNaquadahQuadFuelRod"),
 		// Neutron Reflector
 		T1NeutronReflector(ComponentType.NeutronReflector, "T1NeutronReflector"),
 		// Coolant Cell
@@ -103,9 +109,12 @@ public class ComponentFactory {
 		final Double[] thoriumFuelRod = 		{100000d, 1d, 1d, 20d, 1d, 1d};
 		final Double[] thoriumDualFuelRod = 	{100000d, 6d, 1d, 80d, 1d, 2d};
 		final Double[] thoriumQuadFuelRod = 	{100000d, 24d, 1d, 240d, 1d, 4d};
-		final Double[] moxUraniumFuelRod = 	{10000d, 4d, 5d, 100d, 5d, 1d};
-		final Double[] moxUraniumDualFuelRod = {10000d, 24d, 5d, 400d, 5d, 2d};
-		final Double[] moxUraniumQuadFuelRod = {10000d, 96d, 5d, 1200d, 5d, 4d};
+		final Double[] moxUraniumFuelRod = 		{10000d, 4d, 5d, 100d, 5d, 1d};
+		final Double[] moxUraniumDualFuelRod = 	{10000d, 24d, 5d, 400d, 5d, 2d};
+		final Double[] moxUraniumQuadFuelRod = 	{10000d, 96d, 5d, 1200d, 5d, 4d};
+		final Double[] naquadahFuelRod =		{100000d, 80d, 1d, 2000d, 1d, 1d};
+		final Double[] naquadahDualFuelRod =		{100000d, 480d, 1d, 8000d, 1d, 2d};
+		final Double[] naquadahQuadFuelRod =		{100000d, 1920d, 1d, 24000d, 1d, 4d};
 		componentData.put(ComponentSubType.UraniumFuelRod, uraniumFuelRod);
 		componentData.put(ComponentSubType.UraniumDualFuelRod, uraniumDualFuelRod);
 		componentData.put(ComponentSubType.UraniumQuadFuelRod, uraniumQuadFuelRod);
@@ -115,6 +124,9 @@ public class ComponentFactory {
 		componentData.put(ComponentSubType.MOXUraniumFuelRod, moxUraniumFuelRod);
 		componentData.put(ComponentSubType.MOXUraniumDualFuelRod, moxUraniumDualFuelRod);
 		componentData.put(ComponentSubType.MOXUraniumQuadFuelRod, moxUraniumQuadFuelRod);
+		componentData.put(ComponentSubType.NaquadahFuelRod, naquadahFuelRod);
+		componentData.put(ComponentSubType.NaquadahDualFuelRod, naquadahDualFuelRod);
+		componentData.put(ComponentSubType.NaquadahQuadFuelRod, naquadahQuadFuelRod);
 		// Neutron Reflectors
 		final Double[] t1NeutronReflector = {30000d};
 		componentData.put(ComponentSubType.T1NeutronReflector, t1NeutronReflector);
@@ -177,6 +189,15 @@ public class ComponentFactory {
 		case MOXUraniumQuadFuelRod:
 			rc = new FuelRod(posX, posY, ComponentSubType.DepletedMOXUraniumQuadFuelRod, data);
 			break;
+		case NaquadahFuelRod:
+			rc = new FuelRod(posX, posY, ComponentSubType.DepletedNaquadahFuelRod, data);
+			break;
+		case NaquadahDualFuelRod:
+			rc = new FuelRod(posX, posY, ComponentSubType.DepletedNaquadahDualFuelRod, data);
+			break;
+		case NaquadahQuadFuelRod:
+			rc = new FuelRod(posX, posY, ComponentSubType.DepletedNaquadahQuadFuelRod, data);
+			break;
 			
 		case DepletedUraniumFuelRod:
 		case DepletedUraniumDualFuelRod:
@@ -187,6 +208,9 @@ public class ComponentFactory {
 		case DepletedMOXUraniumFuelRod:
 		case DepletedMOXUraniumDualFuelRod:
 		case DepletedMOXUraniumQuadFuelRod:
+		case DepletedNaquadahFuelRod:
+		case DepletedNaquadahDualFuelRod:
+		case DepletedNaquadahQuadFuelRod:
 			rc = new DepletedFuelRod(posX, posY, type);
 			break;
 			

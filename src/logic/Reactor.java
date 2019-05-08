@@ -3,6 +3,7 @@ package logic;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import component_blueprints.CoolantCell;
 import component_blueprints.DepletedFuelRod;

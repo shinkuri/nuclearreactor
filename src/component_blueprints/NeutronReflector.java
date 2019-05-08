@@ -37,8 +37,14 @@ public class NeutronReflector extends ReactorComponent {
 	public void applyReflectedPulses(FuelRod fuelRod) {
 		fuelRod.addNeutronPulse(fuelRod.getNEUTRON_PULSES_EMITTED());
 		durability -= fuelRod.getNEUTRON_PULSES_EMITTED();
-		if(durability <= 0) {
-			super.setDestroyed();
+		if(durability > 0) {
+			if(super.applyEjectionFunction((int) durability) == true) {
+				super.setStatus(EJECTED);
+			} else {
+				super.setStatus(WORKING);
+			}
+		} else {
+			super.setStatus(DESTROYED);
 		}
 	}
 
